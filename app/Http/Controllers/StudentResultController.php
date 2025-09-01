@@ -65,9 +65,9 @@ class StudentResultController extends Controller
     // 🔹 Update student result
     private function update(Request $request)
     {
-        $id = $request->input('reultId');
+        $id = $request->input('resultId');
         if (!$id) {
-            return response()->json(['status' => false, 'message' => 'Provide a valid reultId'], 404);
+            return response()->json(['status' => false, 'message' => 'Provide a valid resultId'], 404);
         }
 
         $result = StudentResult::find($id);
@@ -80,7 +80,7 @@ class StudentResultController extends Controller
                 'studentId' => 'sometimes|exists:students,studentId',
                 'semesterId' => 'sometimes|exists:semesters,semesterId',
                 'examTypeId' => 'sometimes|exists:exam_types,examTypeId',
-                'seatNumberId' => 'sometimes|unique:student_results,seatNumberId,' . $id . ',reultId',
+                'seatNumberId' => 'sometimes|unique:student_results,seatNumberId,' . $id . ',resultId',
                 'total_cce_max_min' => 'nullable|integer',
                 'total_cce_obt' => 'nullable|integer',
                 'total_see_max_min' => 'nullable|integer',
@@ -112,9 +112,9 @@ class StudentResultController extends Controller
     // 🔹 Delete student result
     private function delete(Request $request)
     {
-        $id = $request->input('reultId');
+        $id = $request->input('resultId');
         if (!$id) {
-            return response()->json(['status' => false, 'message' => 'Provide a valid reultId'], 404);
+            return response()->json(['status' => false, 'message' => 'Provide a valid resultId'], 404);
         }
 
         $result = StudentResult::find($id);
@@ -133,7 +133,10 @@ class StudentResultController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where('seatNumber', 'like', "%{$search}%")
+
+            $query->whereHas('seatNumber', function ($q) use ($search) {
+                $q->where('seat_number', 'like', "%{$search}%"); // Adjust column name if needed
+            })
                 ->orWhereHas('student', function ($q) use ($search) {
                     $q->where('fullName', 'like', "%{$search}%");
                 })
@@ -145,7 +148,7 @@ class StudentResultController extends Controller
                 });
         }
 
-        $filterable = ['studentId', 'semesterId', 'examTypeId', 'seatNumberId', 'result'];
+        $filterable = ['resultId','studentId', 'semesterId', 'examTypeId', 'seatNumberId', 'result'];
 
         foreach ($filterable as $column) {
             if ($request->filled($column)) {

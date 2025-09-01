@@ -10,7 +10,7 @@ class StudentResult extends Model
     use HasFactory;
 
     protected $table = 'student_results';
-    protected $primaryKey = 'reultId'; // primary key name in migration
+    protected $primaryKey = 'resultId'; // primary key name in migration
     
         // Custom timestamp column names
         public $timestamps = false;
