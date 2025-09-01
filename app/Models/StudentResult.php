@@ -11,14 +11,17 @@ class StudentResult extends Model
 
     protected $table = 'student_results';
     protected $primaryKey = 'reultId'; // primary key name in migration
-    public $timestamps = true;
+    
+        // Custom timestamp column names
+        public $timestamps = false;
+    const CREATED_AT = 'createdAt';
+    const UPDATED_AT = 'updatedAt';
 
     protected $fillable = [
         'studentId',
         'semesterId',
         'examTypeId',
         'seatNumberId',
-        'seatNumber',
         'total_cce_max_min',
         'total_cce_obt',
         'total_see_max_min',

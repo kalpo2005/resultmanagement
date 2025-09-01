@@ -34,7 +34,6 @@ class StudentResultController extends Controller
                 'semesterId' => 'required|exists:semesters,semesterId',
                 'examTypeId' => 'required|exists:exam_types,examTypeId',
                 'seatNumberId' => 'required|unique:student_results,seatNumberId',
-                'seatNumber' => 'required|unique:student_results,seatNumber',
                 'total_cce_max_min' => 'nullable|integer',
                 'total_cce_obt' => 'nullable|integer',
                 'total_see_max_min' => 'nullable|integer',
@@ -82,7 +81,6 @@ class StudentResultController extends Controller
                 'semesterId' => 'sometimes|exists:semesters,semesterId',
                 'examTypeId' => 'sometimes|exists:exam_types,examTypeId',
                 'seatNumberId' => 'sometimes|unique:student_results,seatNumberId,' . $id . ',reultId',
-                'seatNumber' => 'sometimes|unique:student_results,seatNumber,' . $id . ',reultId',
                 'total_cce_max_min' => 'nullable|integer',
                 'total_cce_obt' => 'nullable|integer',
                 'total_see_max_min' => 'nullable|integer',
@@ -145,6 +143,14 @@ class StudentResultController extends Controller
                 ->orWhereHas('examType', function ($q) use ($search) {
                     $q->where('examName', 'like', "%{$search}%");
                 });
+        }
+
+        $filterable = ['studentId', 'semesterId', 'examTypeId', 'seatNumberId', 'result'];
+
+        foreach ($filterable as $column) {
+            if ($request->filled($column)) {
+                $query->where($column, $request->input($column));
+            }
         }
 
         $results = $query->get();

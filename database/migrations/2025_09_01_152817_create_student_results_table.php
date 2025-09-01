@@ -17,7 +17,6 @@ return new class extends Migration
             $table->unsignedBigInteger('semesterId');
             $table->unsignedBigInteger('examTypeId');
             $table->unsignedBigInteger('seatNumberId')->unique(); // UNIQUE constraint
-            $table->string('seatNumber')->unique();
 
             // Totals
             $table->integer('total_cce_max_min')->default(0);

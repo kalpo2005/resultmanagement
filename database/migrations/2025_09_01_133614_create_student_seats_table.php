@@ -17,7 +17,8 @@ return new class extends Migration
             $table->unsignedBigInteger('semesterId'); // foreign key to semesters
             $table->unsignedBigInteger('examTypeId'); // foreign key to exam_types
             $table->string('seatNumber')->unique(); // unique seat number
-            $table->timestamps();
+            $table->timestamp('createdAt')->useCurrent();
+            $table->timestamp('updatedAt')->useCurrent()->useCurrentOnUpdate();
 
             // Foreign key constraints
             $table->foreign('studentId')->references('studentId')->on('students')->onDelete('restrict');

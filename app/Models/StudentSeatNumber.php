@@ -15,8 +15,10 @@ class StudentSeatNumber extends Model
     // Primary key
     protected $primaryKey = 'seatNumberId';
 
-    // Enable timestamps
-    public $timestamps = true;
+    // Custom timestamp column names
+    public $timestamps = false;
+    const CREATED_AT = 'createdAt';
+    const UPDATED_AT = 'updatedAt';
 
     // Mass assignable fields
     protected $fillable = [
@@ -34,7 +36,7 @@ class StudentSeatNumber extends Model
     public function student()
     {
         return $this->belongsTo(Student::class, 'studentId', 'studentId')
-                    ->with('college'); // eager load college
+            ->with('college'); // eager load college
     }
 
     // Link to Semester model
