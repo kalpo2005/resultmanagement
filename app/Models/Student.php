@@ -38,6 +38,11 @@ class Student extends Model
         return $this->belongsTo(Semester::class, 'semesterId', 'semesterId');
     }
 
+    public function results()
+{
+    return $this->hasMany(StudentResult::class, 'studentId', 'studentId');
+}
+
     // Set fullName automatically when saving
     protected static function boot()
     {

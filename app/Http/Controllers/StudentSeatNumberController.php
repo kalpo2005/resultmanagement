@@ -139,4 +139,51 @@ class StudentSeatNumberController extends Controller
             'data' => $seats
         ], 200);
     }
+
+    public function fetchBySemAndExam(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'semesterId' => 'required|exists:semesters,semesterId',
+                'examTypeId' => 'required|exists:exam_types,examTypeId',
+            ]);
+
+            $results = StudentSeatNumber::with(['student'])
+                ->where('semesterId', $validated['semesterId'])
+                ->where('examTypeId', $validated['examTypeId'])
+                ->get();
+
+            if ($results->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No students found for given semester and exam type'
+                ], 404);
+            }
+
+            $students = $results->map(function ($result) {
+                return [
+                    'enrollment' => $result->student->enrollmentNumber ?? null,
+                    'seatnumber' => $result->seatNumber ?? null, // direct column
+                    'studentId' => $result->studentId ?? null, // direct column
+                    'semesterId' => $result->semesterId ?? null, // direct column
+                ];
+            });
+
+            return response()->json([
+                'status' => true,
+                'students' => $students
+            ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong. Please try again later.',
+                'error' => $e->getMessage() // remove in production
+            ], 500);
+        }
+    }
 }

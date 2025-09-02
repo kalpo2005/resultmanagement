@@ -14,8 +14,10 @@ Route::post('semester', [SemesterController::class, 'handle']);
 Route::post('student', [studentController::class, 'handle']);
 Route::post('examtype', [ExamTypeController::class, 'handle']);
 Route::post('seatnumber', [StudentSeatNumberController::class, 'handle']);
+Route::post('seatnumber/sem', [StudentSeatNumberController::class, 'fetchBySemAndExam']);
 Route::post('result', [StudentResultController::class, 'handle']);
 Route::post('result/subject', [StudentSubjectResultController::class, 'handle']);
+Route::post('result/subject/autocreate', [StudentSubjectResultController::class, 'insertWithAutoCreate']);
 Route::get('/result/subject/test', function () {
     return response()->json([
         'status' => true,

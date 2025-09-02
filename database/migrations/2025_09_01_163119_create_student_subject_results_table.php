@@ -35,10 +35,7 @@ return new class extends Migration
             $table->timestamp('updatedAt')->useCurrent()->useCurrentOnUpdate();
 
             // ✅ Foreign key definition
-            $table->foreign('resultId')
-                  ->references('resultId')
-                  ->on('student_results')
-                  ->onDelete('cascade');
+            $table->foreign('resultId')->references('resultId')->on('student_results')->onDelete('cascade');
         });
     }
 
