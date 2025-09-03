@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use App\Models\StudentSeatNumber;
 
 class StudentSeatNumberController extends Controller
@@ -155,34 +156,38 @@ class StudentSeatNumberController extends Controller
 
             if ($results->isEmpty()) {
                 return response()->json([
-                    'status' => false,
-                    'message' => 'No students found for given semester and exam type'
-                ], 404);
+                    'students' => []
+                ], 200);
             }
 
             $students = $results->map(function ($result) {
                 return [
                     'enrollment' => $result->student->enrollmentNumber ?? null,
-                    'seatnumber' => $result->seatNumber ?? null, // direct column
-                    'studentId' => $result->studentId ?? null, // direct column
-                    'semesterId' => $result->semesterId ?? null, // direct column
+                    'seatnumber' => $result->seatNumber ?? null,
+                    'studentId'  => $result->studentId ?? null,
+                    'semesterId' => $result->semesterId ?? null,
                 ];
-            });
+            })->toArray();
 
-            return response()->json([
-                'status' => true,
+            $payload = [
                 'students' => $students
-            ], 200);
+            ];
+
+            // 🔥 Call Node.js API and forward response as-is
+            $externalResponse = Http::timeout(60)->post('http://127.0.0.1:3000/get-results', $payload);
+
+            return response()->json(
+                $externalResponse->json(),
+                $externalResponse->status()
+            );
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
-                'status' => false,
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'status' => false,
                 'message' => 'Something went wrong. Please try again later.',
-                'error' => $e->getMessage() // remove in production
+                'error' => $e->getMessage()
             ], 500);
         }
     }
