@@ -93,12 +93,11 @@ class StudentSubjectResult extends Model
     public function seatNumber()
     {
         return $this->hasOneThrough(
-            StudentSeatNumber::class,
             StudentResult::class,
             'resultId',
             'seatNumberId',
             'resultId',
-            'seatNumberId'
+            'seatNumber'
         );
     }
 }

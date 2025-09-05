@@ -11,17 +11,17 @@ class StudentResult extends Model
 
     protected $table = 'student_results';
     protected $primaryKey = 'resultId'; // primary key name in migration
-    
-        // Custom timestamp column names
-        public $timestamps = false;
+
+    // Custom timestamp column names
+    public $timestamps = false;
     const CREATED_AT = 'createdAt';
     const UPDATED_AT = 'updatedAt';
 
     protected $fillable = [
+        'seatNumber',
         'studentId',
         'semesterId',
         'examTypeId',
-        'seatNumberId',
         'total_cce_max_min',
         'total_cce_obt',
         'total_see_max_min',
@@ -41,11 +41,6 @@ class StudentResult extends Model
         return $this->belongsTo(Student::class, 'studentId');
     }
 
-    public function seatNumber()
-    {
-        return $this->belongsTo(StudentSeatNumber::class, 'seatNumberId');
-    }
-
     public function semester()
     {
         return $this->belongsTo(Semester::class, 'semesterId');
@@ -54,6 +49,12 @@ class StudentResult extends Model
     public function examType()
     {
         return $this->belongsTo(ExamType::class, 'examTypeId');
+    }
+
+    //subject relation
+    public function subjects()
+    {
+        return $this->hasMany(StudentSubjectResult::class, 'resultId', 'resultId');
     }
 
     // 🔹 Optional: Computed attributes
@@ -77,4 +78,24 @@ class StudentResult extends Model
         }
         return null;
     }
+
+    // subject marks edit 
+    // public function recalculateTotals()
+    // {
+    //     $subjects = $this->subjects; // relation StudentResult -> StudentSubjectResult
+
+    //     $totalCredits = $subjects->sum('credit');
+    //     $totalObtained = $subjects->sum('total_obtained');
+    //     $totalCreditPoints = $subjects->sum('credit_point');
+
+    //     // Example: SGPA = total_credit_points / total_credits
+    //     $sgpa = $totalCredits > 0 ? round($totalCreditPoints / $totalCredits, 2) : 0;
+
+    //     $this->update([
+    //         'total_credits' => $totalCredits,
+    //         'total_obtained' => $totalObtained,
+    //         'total_credit_points' => $totalCreditPoints,
+    //         'sgpa' => $sgpa,
+    //     ]);
+    // }
 }

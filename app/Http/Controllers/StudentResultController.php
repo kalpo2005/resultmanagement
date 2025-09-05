@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\StudentResult;
+use App\Models\StudentSubjectResult;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 
 class StudentResultController extends Controller
 {
@@ -25,29 +28,27 @@ class StudentResultController extends Controller
         }
     }
 
-    // 🔹 Insert student result
+    // 🔹 Insert
     private function insert(Request $request)
     {
         try {
             $validated = $request->validate([
+                'seatNumber' => 'required|string|max:20|unique:student_results,seatNumber',
                 'studentId' => 'required|exists:students,studentId',
                 'semesterId' => 'required|exists:semesters,semesterId',
                 'examTypeId' => 'required|exists:exam_types,examTypeId',
-                'seatNumberId' => 'required|unique:student_results,seatNumberId',
-                'total_cce_max_min' => 'nullable|integer',
+
+                'total_cce_max_min' => 'nullable|string',
                 'total_cce_obt' => 'nullable|integer',
-                'total_see_max_min' => 'nullable|integer',
+                'total_see_max_min' => 'nullable|string',
                 'total_see_obt' => 'nullable|integer',
-                'total_marks_max_min' => 'nullable|integer',
+                'total_marks_max_min' => 'nullable|string',
                 'total_marks_obt' => 'nullable|integer',
-                'total_credit_points' => 'nullable|integer',
-                'total_credit_points_obtain' => 'nullable|integer',
+                'total_credit_points' => 'nullable|numeric',
+                'total_credit_points_obtain' => 'nullable|numeric',
                 'sgpa' => 'nullable|numeric',
                 'cgpa' => 'nullable|numeric',
                 'result' => 'nullable|string',
-            ], [
-                'seatNumberId.unique' => 'This seat number has already been used for a result!',
-                'seatNumber.unique' => 'This seat number is already assigned!',
             ]);
 
             $result = StudentResult::create($validated);
@@ -55,14 +56,14 @@ class StudentResultController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Student result added successfully',
-                'data' => $result->load(['student', 'semester', 'examType', 'seatNumber'])
+                'data' => $result->load(['student', 'semester', 'examType'])
             ], 201);
         } catch (\Exception $e) {
             return response()->json(['status' => false, 'message' => $e->getMessage()], 400);
         }
     }
 
-    // 🔹 Update student result
+    // 🔹 Update
     private function update(Request $request)
     {
         $id = $request->input('resultId');
@@ -77,24 +78,22 @@ class StudentResultController extends Controller
 
         try {
             $validated = $request->validate([
+                'seatNumber' => 'sometimes|string|max:20|unique:student_results,seatNumber,' . $id . ',resultId',
                 'studentId' => 'sometimes|exists:students,studentId',
                 'semesterId' => 'sometimes|exists:semesters,semesterId',
                 'examTypeId' => 'sometimes|exists:exam_types,examTypeId',
-                'seatNumberId' => 'sometimes|unique:student_results,seatNumberId,' . $id . ',resultId',
-                'total_cce_max_min' => 'nullable|integer',
+
+                'total_cce_max_min' => 'nullable|string',
                 'total_cce_obt' => 'nullable|integer',
-                'total_see_max_min' => 'nullable|integer',
+                'total_see_max_min' => 'nullable|string',
                 'total_see_obt' => 'nullable|integer',
-                'total_marks_max_min' => 'nullable|integer',
+                'total_marks_max_min' => 'nullable|string',
                 'total_marks_obt' => 'nullable|integer',
-                'total_credit_points' => 'nullable|integer',
-                'total_credit_points_obtain' => 'nullable|integer',
+                'total_credit_points' => 'nullable|numeric',
+                'total_credit_points_obtain' => 'nullable|numeric',
                 'sgpa' => 'nullable|numeric',
                 'cgpa' => 'nullable|numeric',
                 'result' => 'nullable|string',
-            ], [
-                'seatNumberId.unique' => 'This seat number has already been used for a result!',
-                'seatNumber.unique' => 'This seat number is already assigned!',
             ]);
 
             $result->update($validated);
@@ -102,14 +101,14 @@ class StudentResultController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Student result updated successfully',
-                'data' => $result->load(['student', 'semester', 'examType', 'seatNumber'])
+                'data' => $result->load(['student', 'semester', 'examType'])
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['status' => false, 'message' => $e->getMessage()], 400);
         }
     }
 
-    // 🔹 Delete student result
+    // 🔹 Delete
     private function delete(Request $request)
     {
         $id = $request->input('resultId');
@@ -126,29 +125,46 @@ class StudentResultController extends Controller
         return response()->json(['status' => true, 'message' => 'Student result deleted successfully'], 200);
     }
 
-    // 🔹 Get all results with search/filter
+    // 🔹 Get all results (with max filters + search)
     private function getAll(Request $request)
     {
-        $query = StudentResult::with(['student', 'semester', 'examType', 'seatNumber']);
+        $query = StudentResult::with(['student', 'semester', 'examType']);
 
+        // 🔹 Global search
         if ($request->filled('search')) {
             $search = $request->input('search');
 
-            $query->whereHas('seatNumber', function ($q) use ($search) {
-                $q->where('seat_number', 'like', "%{$search}%"); // Adjust column name if needed
-            })
-                ->orWhereHas('student', function ($q) use ($search) {
-                    $q->where('fullName', 'like', "%{$search}%");
-                })
-                ->orWhereHas('semester', function ($q) use ($search) {
-                    $q->where('semesterName', 'like', "%{$search}%");
-                })
-                ->orWhereHas('examType', function ($q) use ($search) {
-                    $q->where('examName', 'like', "%{$search}%");
-                });
+            $query->where(function ($q) use ($search) {
+                $q->where('seatNumber', 'like', "%{$search}%")
+                    ->orWhere('result', 'like', "%{$search}%")
+                    ->orWhereHas('student', function ($sq) use ($search) {
+                        $sq->where('fullName', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('semester', function ($sq) use ($search) {
+                        $sq->where('semesterName', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('examType', function ($sq) use ($search) {
+                        $sq->where('examName', 'like', "%{$search}%");
+                    });
+            });
         }
 
-        $filterable = ['resultId','studentId', 'semesterId', 'examTypeId', 'seatNumberId', 'result'];
+        // 🔹 Max-to-max filtering
+        $filterable = [
+            'resultId',
+            'seatNumber',
+            'studentId',
+            'semesterId',
+            'examTypeId',
+            'total_cce_max_min',
+            'total_see_max_min',
+            'total_marks_max_min',
+            'total_credit_points',
+            'total_credit_points_obtain',
+            'sgpa',
+            'cgpa',
+            'result'
+        ];
 
         foreach ($filterable as $column) {
             if ($request->filled($column)) {
@@ -156,12 +172,203 @@ class StudentResultController extends Controller
             }
         }
 
-        $results = $query->get();
+        // 🔹 Sorting
+        if ($request->filled('sort_by') && $request->filled('sort_order')) {
+            $query->orderBy($request->input('sort_by'), $request->input('sort_order'));
+        }
 
-        return response()->json([
+        // 🔹 Pagination (default 10 per page)
+        $limit = $request->input('limit', 10);  // default 10
+        $page = $request->input('page', 1);     // default page 1
+
+        $results = $query->paginate($limit, ['*'], 'page', $page);
+
+        // 🔹 Custom clean response (no URLs)
+        $response = [
             'status' => true,
             'message' => 'Student results fetched successfully',
-            'data' => $results
-        ], 200);
+            'data' => $results->items()
+            // 'pagination' => [
+            //     'total' => $results->total(),
+            //     'per_page' => $results->perPage(),
+            //     'current_page' => $results->currentPage(),
+            //     'last_page' => $results->lastPage(),
+            // ]
+        ];
+
+        return response()->json($response, 200);
+    }
+
+    // get all results seatNumber for the api call Nodejs
+
+    public function sendResultsToNode(Request $request)
+    {
+        $validated = $request->validate([
+            'examTypeId' => 'required|exists:exam_types,examTypeId',
+            'semesterId' => 'required|exists:semesters,semesterId',
+        ]);
+
+        // 🔹 Fetch matching results
+        $results = StudentResult::with('student')
+            ->where('examTypeId', $validated['examTypeId'])
+            ->where('semesterId', $validated['semesterId'])
+            ->get();
+
+        if ($results->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No results found for this exam type & semester.'
+            ], 404);
+        }
+
+        // 🔹 Format students array for Node.js API
+        $students = $results->map(function ($res) {
+            return [
+                'enrollment' => $res->student->enrollmentNumber ?? null,
+                'seatnumber' => $res->seatNumber,
+                'resultId' => $res->resultId,
+                'studentId' => $res->studentId,
+                'semesterId' => $res->semesterId,
+                'collegeId' => $res->collegeId ?? null,
+            ];
+        })->values()->toArray();
+
+        // 🔹 Send request to Node.js API
+        try {
+            $response = Http::post('http://localhost:3000/get-results', [
+                'students' => $students
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data sent to Node.js API successfully',
+                'node_response' => $response->json(),
+                // 'data_sent' => $students
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to connect to Node.js API',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // for the marks insert
+    public function upsertResultWithSubjects(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'resultId' => 'sometimes|integer|exists:student_results,resultId',
+                'studentId' => 'required|exists:students,studentId',
+                'semesterId' => 'required|exists:semesters,semesterId',
+                'examTypeId' => 'required|exists:exam_types,examTypeId',
+                'seatnumber' => 'required|string|max:20',
+
+                'result.final_result' => 'required|string',
+
+                // subjects
+                'subjects' => 'required|array|min:1',
+                'subjects.*.subject_code' => 'required|string|max:20',
+                'subjects.*.subject_name' => 'required|string|max:100',
+                'subjects.*.credit' => 'required|integer',
+                'subjects.*.cce_max_min' => 'required|string',
+                'subjects.*.cce_obtained' => 'required|integer',
+                'subjects.*.see_max_min' => 'required|string',
+                'subjects.*.see_obtained' => 'required|integer',
+                'subjects.*.total_max_min' => 'required|string',
+                'subjects.*.total_obtained' => 'required|integer',
+                'subjects.*.marks_percentage' => 'sometimes|numeric',
+                'subjects.*.letter_grade' => 'sometimes|string|max:5',
+                'subjects.*.grade_point' => 'sometimes|numeric',
+                'subjects.*.credit_point' => 'sometimes|numeric',
+            ]);
+
+            DB::beginTransaction();
+
+            // Create or update result
+            if (!empty($validated['resultId'])) {
+                $studentResult = StudentResult::find($validated['resultId']);
+                if (!$studentResult) {
+                    return response()->json(['status' => false, 'message' => 'Result not found'], 404);
+                }
+
+                $studentResult->update([
+                    'studentId' => $validated['studentId'],
+                    'semesterId' => $validated['semesterId'],
+                    'examTypeId' => $validated['examTypeId'],
+                    'seatnumber' => $validated['seatnumber'],
+                    'final_result' => $validated['result']['final_result'],
+                ]);
+            } else {
+                $studentResult = StudentResult::create([
+                    'studentId' => $validated['studentId'],
+                    'semesterId' => $validated['semesterId'],
+                    'examTypeId' => $validated['examTypeId'],
+                    'seatnumber' => $validated['seatnumber'],
+                    'final_result' => $validated['result']['final_result'],
+                ]);
+            }
+
+            // Insert subjects, skipping duplicates
+            foreach ($validated['subjects'] as $subject) {
+                $exists = StudentSubjectResult::where('resultId', $studentResult->resultId)
+                    ->where('subject_name', $subject['subject_name'])
+                    ->exists();
+
+                if ($exists) {
+                    continue; // skip duplicate subject
+                }
+
+                StudentSubjectResult::create([
+                    'resultId' => $studentResult->resultId,
+                    'subject_code' => $subject['subject_code'],
+                    'subject_type' => $subject['subject_type'] ?? null,
+                    'subject_name' => $subject['subject_name'],
+                    'credit' => $subject['credit'],
+                    'cce_max_min' => $subject['cce_max_min'],
+                    'cce_obtained' => $subject['cce_obtained'],
+                    'see_max_min' => $subject['see_max_min'],
+                    'see_obtained' => $subject['see_obtained'],
+                    'total_max_min' => $subject['total_max_min'],
+                    'total_obtained' => $subject['total_obtained'],
+                    'marks_percentage' => $subject['marks_percentage'] ?? null,
+                    'letter_grade' => $subject['letter_grade'] ?? null,
+                    'grade_point' => $subject['grade_point'] ?? null,
+                    'credit_point' => $subject['credit_point'] ?? null,
+                ]);
+            }
+
+            // Recalculate totals
+            $subjects = $studentResult->subjects()->get();
+
+            $totalCredits = $subjects->sum('credit');
+            $totalObtained = $subjects->sum('total_obtained');
+            $totalCreditPoints = $subjects->sum('credit_point');
+            $cceObtaintTotal = $subjects->sum('cce_obtained');
+            $seeObtaintTotal = $subjects->sum('see_obtained');
+            $sgpa = $totalCredits > 0 ? round($totalCreditPoints / $totalCredits, 2) : 0;
+
+            $studentResult->update([
+                'total_credits' => $totalCredits,
+                'total_obtained' => $totalObtained,
+                'total_credit_points' => $totalCreditPoints,
+                'total_cce_obt' => $cceObtaintTotal,
+                'total_see_obt' => $seeObtaintTotal,
+                'total_marks_obt' => $seeObtaintTotal + $cceObtaintTotal,
+                'sgpa' => $sgpa,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Result and subjects saved successfully',
+                'data' => $studentResult->load('subjects')
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 400);
+        }
     }
 }
