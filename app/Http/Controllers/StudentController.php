@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use App\Models\Student;
 use Illuminate\Support\Facades\Storage;
 
@@ -220,5 +223,86 @@ class StudentController extends Controller
         } catch (\Exception $e) {
             throw new \Exception("Image upload failed: " . $e->getMessage());
         }
+    }
+
+    // upload a student from excel
+    public function uploadExcel(Request $request)
+    {
+        try {
+            $request->validate([
+                'collegeId'   => 'required|exists:colleges,collegeId',
+                'semesterId'   => 'required|exists:semesters,semesterId',
+                'seatStart'   => 'required|integer',
+                'seatEnd'     => 'required|integer',
+                'excel'        => 'required|mimes:xlsx,xls'
+            ]);
+
+            $file = $request->file('excel');
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray(null, true, true, true);
+
+            $inserted = [];
+            $skipped = [];
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $firstMessage = $e->validator->errors()->first();
+            return response()->json(['status' => false, 'message' => $firstMessage], 422);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 400);
+        }
+
+
+        foreach ($rows as $index => $row) {
+            if ($index == 1) continue; // Skip header row
+
+            $seatNo = trim($row['A'] ?? '');
+            $enrollment = trim($row['B'] ?? '');
+            $surname = trim($row['C'] ?? '');
+            $firstName = trim($row['D'] ?? '');
+            $lastName = trim($row['E'] ?? '');
+
+            // Skip if seat number not in given limit
+            if ($seatNo < $request->seatStart || $seatNo > $request->seatEnd) {
+                continue;
+            }
+
+            // Check duplicate by enrollment number
+            if (Student::where('enrollmentNumber', $enrollment)->exists()) {
+                $skipped[] = [
+                    'enrollmentNumber' => $enrollment,
+                    'reason' => 'Already exists'
+                ];
+                continue;
+            }
+
+            try {
+                $student = Student::create([
+                    'enrollmentNumber' => $enrollment,
+                    'firstName'        => $firstName,
+                    'middleName'       => null,
+                    'lastName'         => $lastName,
+                    'collegeId'        => $request->collegeId,
+                    'semesterId'       => $request->semesterId, // you can add logic for semester
+                    'status'           => true
+                ]);
+
+                $inserted[] = $student;
+            } catch (\Exception $e) {
+                $skipped[] = [
+                    'enrollmentNumber' => $enrollment,
+                    'reason' => $e->getMessage()
+                ];
+            }
+        }
+
+        return response()->json([
+            'status' => true,
+            'collegeId' => $request->collegeId,
+            'seatRange' => [$request->seatStart, $request->seatEnd],
+            'insertedCount' => count($inserted),
+            'skippedCount'  => count($skipped),
+            'inserted'      => $inserted,
+            'skipped'       => $skipped,
+        ]);
     }
 }
