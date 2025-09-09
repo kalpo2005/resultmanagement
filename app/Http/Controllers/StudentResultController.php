@@ -7,6 +7,8 @@ use App\Models\StudentResult;
 use App\Models\StudentSubjectResult;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+
 
 class StudentResultController extends Controller
 {
@@ -212,6 +214,7 @@ class StudentResultController extends Controller
         $results = StudentResult::with('student')
             ->where('examTypeId', $validated['examTypeId'])
             ->where('semesterId', $validated['semesterId'])
+            ->where('result', 'pending') // only pending result can send to node 
             ->get();
 
         if ($results->isEmpty()) {
@@ -266,6 +269,9 @@ class StudentResultController extends Controller
                 'seatnumber' => 'required|string|max:20',
 
                 'result.final_result' => 'required|string',
+                'result.total.see_max_min' => 'required|string',
+                'result.total.cce_max_min' => 'required|string',
+                'result.total.total_max_min' => 'required|string',
 
                 // subjects
                 'subjects' => 'required|array|min:1',
@@ -298,7 +304,10 @@ class StudentResultController extends Controller
                     'semesterId' => $validated['semesterId'],
                     'examTypeId' => $validated['examTypeId'],
                     'seatnumber' => $validated['seatnumber'],
-                    'final_result' => $validated['result']['final_result'],
+                    'result' => $validated['result']['final_result'],
+                    'total_cce_max_min' => $validated['result']['total']['cce_max_min'] ?? 0,
+                    'total_see_max_min' => $validated['result']['total']['see_max_min'] ?? 0,
+                    'total_marks_max_min' => $validated['result']['total']['total_max_min'] ?? 0,
                 ]);
             } else {
                 $studentResult = StudentResult::create([
@@ -306,7 +315,10 @@ class StudentResultController extends Controller
                     'semesterId' => $validated['semesterId'],
                     'examTypeId' => $validated['examTypeId'],
                     'seatnumber' => $validated['seatnumber'],
-                    'final_result' => $validated['result']['final_result'],
+                    'result' => $validated['result']['final_result'],
+                    'total_cce_max_min' => $validated['result']['total']['cce_max_min'] ?? 0,
+                    'total_see_max_min' => $validated['result']['total']['see_max_min'] ?? 0,
+                    'total_marks_max_min' => $validated['result']['total']['total_max_min'] ?? 0,
                 ]);
             }
 
@@ -370,5 +382,88 @@ class StudentResultController extends Controller
             DB::rollBack();
             return response()->json(['status' => false, 'message' => $e->getMessage()], 400);
         }
+    }
+
+
+    // for the excel to seat number
+    // for the excel to seat number
+    public function importResultsExcel(Request $request)
+    {
+        $validated = $request->validate([
+            'collegeId'   => 'required|exists:colleges,collegeId',
+            'semesterId'  => 'required|exists:semesters,semesterId',
+            'examTypeId'  => 'required|exists:exam_types,examTypeId',
+            'file'        => 'required|file|mimes:xlsx,csv,xls',
+        ]);
+
+        $path = $request->file('file')->getRealPath();
+
+        // Read first sheet into array
+        $rows = Excel::toArray([], $path)[0];
+
+        $inserted = [];
+        $skipped  = [];
+
+        foreach ($rows as $index => $row) {
+            if ($index === 0) continue; // skip header row
+
+            $seatnumber   = $row[0] ?? null; // Column A → Seat No
+            $enrollmentNo = $row[1] ?? null; // Column B → Enrollment No
+
+            if (!$seatnumber || !$enrollmentNo) {
+                $skipped[] = [
+                    'seatnumber'   => $seatnumber,
+                    'enrollmentNo' => $enrollmentNo,
+                    'reason'       => 'Missing seat or enrollment number'
+                ];
+                continue;
+            }
+
+            // find student by enrollment
+            $student = DB::table('students')
+                ->where('enrollmentNumber', $enrollmentNo)
+                ->first();
+
+            if (!$student) {
+                $skipped[] = [
+                    'seatnumber'   => $seatnumber,
+                    'enrollmentNo' => $enrollmentNo,
+                    'reason'       => 'Student not found'
+                ];
+                continue;
+            }
+
+            // check if result already exists for this seatnumber
+            $exists = DB::table('student_results')
+                ->where('seatnumber', $seatnumber)
+                ->exists();
+
+            if ($exists) {
+                $skipped[] = [
+                    'seatnumber'   => $seatnumber,
+                    'enrollmentNo' => $enrollmentNo,
+                    'reason'       => 'Already exists'
+                ];
+                continue;
+            }
+
+            // ✅ insert into student_results
+            $result = StudentResult::create([
+                'collegeId'  => $validated['collegeId'],
+                'studentId'  => $student->studentId,
+                'semesterId' => $validated['semesterId'],   // use given semesterId instead of student->semesterId - 1
+                'examTypeId' => $validated['examTypeId'],
+                'seatnumber' => $seatnumber, // ✅ must match DB column
+            ]);
+
+            $inserted[] = $result;
+        }
+
+        return response()->json([
+            'status'   => true,
+            'message'  => 'Excel processed successfully',
+            'inserted' => $inserted,
+            'skipped'  => $skipped
+        ]);
     }
 }

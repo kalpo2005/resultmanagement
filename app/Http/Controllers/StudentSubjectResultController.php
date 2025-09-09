@@ -114,8 +114,7 @@ class StudentSubjectResultController extends Controller
         $query = StudentSubjectResult::with([
             'studentResult.student',
             'studentResult.semester',
-            'studentResult.examType',
-            'studentResult.seatNumber'
+            'studentResult.examType'
         ]);
 
         // Apply search filter
@@ -124,8 +123,7 @@ class StudentSubjectResultController extends Controller
             $query->whereHas('studentResult', function ($q) use ($search) {
                 $q->whereHas('student', fn($q2) => $q2->where('fullName', 'like', "%{$search}%"))
                     ->orWhereHas('semester', fn($q2) => $q2->where('semesterName', 'like', "%{$search}%"))
-                    ->orWhereHas('examType', fn($q2) => $q2->where('examName', 'like', "%{$search}%"))
-                    ->orWhere('seatNumberId', 'like', "%{$search}%");
+                    ->orWhereHas('examType', fn($q2) => $q2->where('examName', 'like', "%{$search}%"));
             });
         }
 

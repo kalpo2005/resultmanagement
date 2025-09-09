@@ -257,9 +257,9 @@ class StudentController extends Controller
 
             $seatNo = trim($row['A'] ?? '');
             $enrollment = trim($row['B'] ?? '');
-            $surname = trim($row['C'] ?? '');
+            $lastName = trim($row['C'] ?? '');
             $firstName = trim($row['D'] ?? '');
-            $lastName = trim($row['E'] ?? '');
+            $middleName = trim($row['E'] ?? '');
 
             // Skip if seat number not in given limit
             if ($seatNo < $request->seatStart || $seatNo > $request->seatEnd) {
@@ -279,7 +279,7 @@ class StudentController extends Controller
                 $student = Student::create([
                     'enrollmentNumber' => $enrollment,
                     'firstName'        => $firstName,
-                    'middleName'       => null,
+                    'middleName'       => $middleName,
                     'lastName'         => $lastName,
                     'collegeId'        => $request->collegeId,
                     'semesterId'       => $request->semesterId, // you can add logic for semester

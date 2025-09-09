@@ -38,17 +38,17 @@ class StudentResult extends Model
     // 🔹 Relationships
     public function student()
     {
-        return $this->belongsTo(Student::class, 'studentId');
+        return $this->belongsTo(Student::class, 'studentId', 'studentId');
     }
 
     public function semester()
     {
-        return $this->belongsTo(Semester::class, 'semesterId');
+        return $this->belongsTo(Semester::class, 'semesterId', 'semesterId');
     }
 
     public function examType()
     {
-        return $this->belongsTo(ExamType::class, 'examTypeId');
+        return $this->belongsTo(ExamType::class, 'examTypeId', 'examTypeId');
     }
 
     //subject relation
