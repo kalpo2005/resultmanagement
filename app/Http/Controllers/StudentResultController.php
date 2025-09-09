@@ -384,86 +384,89 @@ class StudentResultController extends Controller
         }
     }
 
-
-    // for the excel to seat number
     // for the excel to seat number
     public function importResultsExcel(Request $request)
     {
-        $validated = $request->validate([
-            'collegeId'   => 'required|exists:colleges,collegeId',
-            'semesterId'  => 'required|exists:semesters,semesterId',
-            'examTypeId'  => 'required|exists:exam_types,examTypeId',
-            'file'        => 'required|file|mimes:xlsx,csv,xls',
-        ]);
-
-        $path = $request->file('file')->getRealPath();
-
-        // Read first sheet into array
-        $rows = Excel::toArray([], $path)[0];
-
-        $inserted = [];
-        $skipped  = [];
-
-        foreach ($rows as $index => $row) {
-            if ($index === 0) continue; // skip header row
-
-            $seatnumber   = $row[0] ?? null; // Column A → Seat No
-            $enrollmentNo = $row[1] ?? null; // Column B → Enrollment No
-
-            if (!$seatnumber || !$enrollmentNo) {
-                $skipped[] = [
-                    'seatnumber'   => $seatnumber,
-                    'enrollmentNo' => $enrollmentNo,
-                    'reason'       => 'Missing seat or enrollment number'
-                ];
-                continue;
-            }
-
-            // find student by enrollment
-            $student = DB::table('students')
-                ->where('enrollmentNumber', $enrollmentNo)
-                ->first();
-
-            if (!$student) {
-                $skipped[] = [
-                    'seatnumber'   => $seatnumber,
-                    'enrollmentNo' => $enrollmentNo,
-                    'reason'       => 'Student not found'
-                ];
-                continue;
-            }
-
-            // check if result already exists for this seatnumber
-            $exists = DB::table('student_results')
-                ->where('seatnumber', $seatnumber)
-                ->exists();
-
-            if ($exists) {
-                $skipped[] = [
-                    'seatnumber'   => $seatnumber,
-                    'enrollmentNo' => $enrollmentNo,
-                    'reason'       => 'Already exists'
-                ];
-                continue;
-            }
-
-            // ✅ insert into student_results
-            $result = StudentResult::create([
-                'collegeId'  => $validated['collegeId'],
-                'studentId'  => $student->studentId,
-                'semesterId' => $validated['semesterId'],   // use given semesterId instead of student->semesterId - 1
-                'examTypeId' => $validated['examTypeId'],
-                'seatnumber' => $seatnumber, // ✅ must match DB column
+        try {
+            $validated = $request->validate([
+                'collegeId'   => 'required|exists:colleges,collegeId',
+                'semesterId'  => 'required|exists:semesters,semesterId',
+                'examTypeId'  => 'required|exists:exam_types,examTypeId',
+                'file'        => 'required|file|mimes:xlsx,csv,xls',
             ]);
 
-            $inserted[] = $result;
-        }
+            $path = $request->file('file')->getRealPath();
 
-        return response()->json([
-            'status'   => true,
-            'message'  => 'Excel processed successfully',
-            'inserted' => $inserted,
-            'skipped'  => $skipped
-        ]);
+            // Read first sheet into array
+            $rows = Excel::toArray([], $path)[0];
+
+            $inserted = [];
+            $skipped  = [];
+
+            foreach ($rows as $index => $row) {
+                if ($index === 0) continue; // skip header row
+
+                // Map columns by index
+                $seatNumber   = trim($row[0] ?? ''); // Column A
+                $enrollmentNo = trim($row[1] ?? ''); // Column B
+
+                if (!$seatNumber || !$enrollmentNo) {
+                    $skipped[] = [
+                        'seatNumber'   => $seatNumber,
+                        'enrollmentNo' => $enrollmentNo,
+                        'reason'       => 'Missing seat or enrollment number'
+                    ];
+                    continue;
+                }
+
+                // find student by enrollment
+                $student = DB::table('students')
+                    ->where('enrollmentNumber', $enrollmentNo)
+                    ->first();
+
+                if (!$student) {
+                    $skipped[] = [
+                        'seatNumber'   => $seatNumber,
+                        'enrollmentNo' => $enrollmentNo,
+                        'reason'       => 'Student not found'
+                    ];
+                    continue;
+                }
+
+                // check if result already exists for this seatnumber
+                $exists = DB::table('student_results')
+                    ->where('seatNumber', $seatNumber)
+                    ->exists();
+
+                if ($exists) {
+                    $skipped[] = [
+                        'seatNumber'   => $seatNumber,
+                        'enrollmentNo' => $enrollmentNo,
+                        'reason'       => 'Already exists'
+                    ];
+                    continue;
+                }
+
+                // ✅ insert into student_results
+                $result = StudentResult::create([
+                    'collegeId'   => $student->collegeId,
+                    'studentId'   => $student->studentId,
+                    'semesterId'  => $validated['semesterId'],
+                    'examTypeId'  => $validated['examTypeId'],
+                    'seatNumber'  => $seatNumber,
+                ]);
+
+                $inserted[] = $result;
+            }
+
+            return response()->json([
+                'status'   => true,
+                'message'  => 'Excel processed successfully',
+                'inserted' => $inserted,
+                'skipped'  => $skipped
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 400);
+        }
     }
 }
