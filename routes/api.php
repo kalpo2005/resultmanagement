@@ -18,7 +18,7 @@ Route::post('examtype', [ExamTypeController::class, 'handle']);
 Route::post('result', [StudentResultController::class, 'handle']);
 Route::post('result/excel', [StudentResultController::class, 'importResultsExcel']);
 Route::post('resulttonode', [StudentResultController::class, 'sendResultsToNode']);
-Route::post('result/subject/autocreate', [StudentResultController::class, 'upsertResultWithSubjects']);
+Route::post('result/subject/autocreate', [StudentResultController::class, 'updateResultWithSubjects']);
 Route::post('result/subject', [StudentSubjectResultController::class, 'handle']);
 Route::get('/result/subject', function () {
     return response()->json([

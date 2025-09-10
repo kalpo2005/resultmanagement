@@ -258,7 +258,7 @@ class StudentResultController extends Controller
     }
 
     // for the marks insert
-    public function upsertResultWithSubjects(Request $request)
+    public function updateResultWithSubjects(Request $request)
     {
         try {
             $validated = $request->validate([
