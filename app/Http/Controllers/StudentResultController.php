@@ -273,17 +273,17 @@ class StudentResultController extends Controller
                 'result.total.cce_max_min' => 'required|string',
                 'result.total.total_max_min' => 'required|string',
 
-                // subjects
-                'subjects' => 'required|array|min:1',
-                'subjects.*.subject_code' => 'required|string|max:20',
-                'subjects.*.subject_name' => 'required|string|max:100',
-                'subjects.*.credit' => 'required|integer',
-                'subjects.*.cce_max_min' => 'required|string',
-                'subjects.*.cce_obtained' => 'required|integer',
-                'subjects.*.see_max_min' => 'required|string',
-                'subjects.*.see_obtained' => 'required|integer',
-                'subjects.*.total_max_min' => 'required|string',
-                'subjects.*.total_obtained' => 'required|integer',
+                // make subjects optional now
+                'subjects' => 'nullable|array',
+                'subjects.*.subject_code' => 'required_with:subjects|string|max:20',
+                'subjects.*.subject_name' => 'required_with:subjects|string|max:100',
+                'subjects.*.credit' => 'required_with:subjects|integer',
+                'subjects.*.cce_max_min' => 'required_with:subjects|string',
+                'subjects.*.cce_obtained' => 'required_with:subjects|integer',
+                'subjects.*.see_max_min' => 'required_with:subjects|string',
+                'subjects.*.see_obtained' => 'required_with:subjects|integer',
+                'subjects.*.total_max_min' => 'required_with:subjects|string',
+                'subjects.*.total_obtained' => 'required_with:subjects|integer',
                 'subjects.*.marks_percentage' => 'sometimes|numeric',
                 'subjects.*.letter_grade' => 'sometimes|string|max:5',
                 'subjects.*.grade_point' => 'sometimes|numeric',
@@ -291,6 +291,15 @@ class StudentResultController extends Controller
             ]);
 
             DB::beginTransaction();
+
+            // ✅ If ABSENT → force FAIL with 000 totals
+            if (strtoupper($validated['result']['final_result']) === 'ABSENT') {
+                $validated['result']['final_result'] = 'FAIL';
+                $validated['result']['total']['cce_max_min'] = '0';
+                $validated['result']['total']['see_max_min'] = '0';
+                $validated['result']['total']['total_max_min'] = '0';
+                $validated['subjects'] = []; // allow no subjects
+            }
 
             // Create or update result
             if (!empty($validated['resultId'])) {
@@ -322,36 +331,48 @@ class StudentResultController extends Controller
                 ]);
             }
 
-            // Insert subjects, skipping duplicates
-            foreach ($validated['subjects'] as $subject) {
-                $exists = StudentSubjectResult::where('resultId', $studentResult->resultId)
-                    ->where('subject_name', $subject['subject_name'])
-                    ->exists();
+            // Only insert subjects if available
+            if (!empty($validated['subjects'])) {
+                foreach ($validated['subjects'] as $subject) {
+                    $exists = StudentSubjectResult::where('resultId', $studentResult->resultId)
+                        ->where('subject_name', $subject['subject_name'])
+                        ->exists();
 
-                if ($exists) {
-                    continue; // skip duplicate subject
+                    if ($exists) {
+                        continue;
+                    }
+
+                    // ✅ Force 000 if subject failed
+                    if (!empty($subject['is_failed']) && $subject['is_failed']) {
+                        $subject['cce_obtained'] = 0;
+                        $subject['see_obtained'] = 0;
+                        $subject['total_obtained'] = 0;
+                        $subject['marks_percentage'] = 0;
+                        $subject['grade_point'] = 0;
+                        $subject['credit_point'] = 0;
+                    }
+
+                    StudentSubjectResult::create([
+                        'resultId' => $studentResult->resultId,
+                        'subject_code' => $subject['subject_code'],
+                        'subject_type' => $subject['subject_type'] ?? null,
+                        'subject_name' => $subject['subject_name'],
+                        'credit' => $subject['credit'],
+                        'cce_max_min' => $subject['cce_max_min'],
+                        'cce_obtained' => $subject['cce_obtained'],
+                        'see_max_min' => $subject['see_max_min'],
+                        'see_obtained' => $subject['see_obtained'],
+                        'total_max_min' => $subject['total_max_min'],
+                        'total_obtained' => $subject['total_obtained'],
+                        'marks_percentage' => $subject['marks_percentage'] ?? null,
+                        'letter_grade' => $subject['letter_grade'] ?? null,
+                        'grade_point' => $subject['grade_point'] ?? null,
+                        'credit_point' => $subject['credit_point'] ?? null,
+                    ]);
                 }
-
-                StudentSubjectResult::create([
-                    'resultId' => $studentResult->resultId,
-                    'subject_code' => $subject['subject_code'],
-                    'subject_type' => $subject['subject_type'] ?? null,
-                    'subject_name' => $subject['subject_name'],
-                    'credit' => $subject['credit'],
-                    'cce_max_min' => $subject['cce_max_min'],
-                    'cce_obtained' => $subject['cce_obtained'],
-                    'see_max_min' => $subject['see_max_min'],
-                    'see_obtained' => $subject['see_obtained'],
-                    'total_max_min' => $subject['total_max_min'],
-                    'total_obtained' => $subject['total_obtained'],
-                    'marks_percentage' => $subject['marks_percentage'] ?? null,
-                    'letter_grade' => $subject['letter_grade'] ?? null,
-                    'grade_point' => $subject['grade_point'] ?? null,
-                    'credit_point' => $subject['credit_point'] ?? null,
-                ]);
             }
 
-            // Recalculate totals
+            // Recalculate totals only if subjects exist
             $subjects = $studentResult->subjects()->get();
 
             $totalCredits = $subjects->sum('credit');
@@ -362,20 +383,20 @@ class StudentResultController extends Controller
             $sgpa = $totalCredits > 0 ? round($totalCreditPoints / $totalCredits, 2) : 0;
 
             $studentResult->update([
-                'total_credits' => $totalCredits,
-                'total_obtained' => $totalObtained,
-                'total_credit_points' => $totalCreditPoints,
-                'total_cce_obt' => $cceObtaintTotal,
-                'total_see_obt' => $seeObtaintTotal,
-                'total_marks_obt' => $seeObtaintTotal + $cceObtaintTotal,
-                'sgpa' => $sgpa,
+                'total_credits' => $totalCredits ?? 0,
+                'total_obtained' => $totalObtained ?? 0,
+                'total_credit_points' => $totalCreditPoints ?? 0,
+                'total_cce_obt' => $cceObtaintTotal ?? 0,
+                'total_see_obt' => $seeObtaintTotal ?? 0,
+                'total_marks_obt' => ($seeObtaintTotal ?? 0) + ($cceObtaintTotal ?? 0),
+                'sgpa' => $sgpa ?? 0,
             ]);
 
             DB::commit();
 
             return response()->json([
                 'status' => true,
-                'message' => 'Result and subjects saved successfully',
+                'message' => 'Result saved successfully',
                 'data' => $studentResult->load('subjects')
             ], 200);
         } catch (\Exception $e) {
@@ -383,6 +404,7 @@ class StudentResultController extends Controller
             return response()->json(['status' => false, 'message' => $e->getMessage()], 400);
         }
     }
+
 
     // for the excel to seat number
     public function importResultsExcel(Request $request)
