@@ -273,90 +273,54 @@ class StudentResultController extends Controller
                 'result.total.cce_max_min' => 'required|string',
                 'result.total.total_max_min' => 'required|string',
 
-                // make subjects optional now
-                'subjects' => 'nullable|array',
-                'subjects.*.subject_code' => 'required_with:subjects|string|max:20',
-                'subjects.*.subject_name' => 'required_with:subjects|string|max:100',
-                'subjects.*.credit' => 'required_with:subjects|integer',
-                'subjects.*.cce_max_min' => 'required_with:subjects|string',
-                'subjects.*.cce_obtained' => 'required_with:subjects|integer',
-                'subjects.*.see_max_min' => 'required_with:subjects|string',
-                'subjects.*.see_obtained' => 'required_with:subjects|integer',
-                'subjects.*.total_max_min' => 'required_with:subjects|string',
-                'subjects.*.total_obtained' => 'required_with:subjects|integer',
-                'subjects.*.marks_percentage' => 'sometimes|numeric',
-                'subjects.*.letter_grade' => 'sometimes|string|max:5',
-                'subjects.*.grade_point' => 'sometimes|numeric',
-                'subjects.*.credit_point' => 'sometimes|numeric',
+                'subjects' => 'required|array|min:1',
+                'subjects.*.subject_code' => 'required|string|max:20',
+                'subjects.*.subject_name' => 'required|string|max:100',
+                'subjects.*.credit' => 'required|integer',
+                'subjects.*.cce_max_min' => 'required|string',
+                'subjects.*.cce_obtained' => 'required|integer',
+                'subjects.*.see_max_min' => 'required|string',
+                'subjects.*.see_obtained' => 'required|integer',
+                'subjects.*.total_max_min' => 'required|string',
+                'subjects.*.total_obtained' => 'required|integer',
+                'subjects.*.marks_percentage' => 'nullable|numeric',
+                'subjects.*.letter_grade' => 'nullable|string|max:5',
+                'subjects.*.grade_point' => 'nullable|numeric',
+                'subjects.*.credit_point' => 'nullable|numeric',
             ]);
 
             DB::beginTransaction();
 
-            // ✅ If ABSENT → force FAIL with 000 totals
-            if (strtoupper($validated['result']['final_result']) === 'ABSENT') {
-                $validated['result']['final_result'] = 'FAIL';
-                $validated['result']['total']['cce_max_min'] = '0';
-                $validated['result']['total']['see_max_min'] = '0';
-                $validated['result']['total']['total_max_min'] = '0';
-                $validated['subjects'] = []; // allow no subjects
+            // Upsert result
+            $studentResult = !empty($validated['resultId'])
+                ? StudentResult::find($validated['resultId'])
+                : new StudentResult();
+
+            if (!$studentResult) {
+                return response()->json(['status' => false, 'message' => 'Result not found'], 404);
             }
 
-            // Create or update result
-            if (!empty($validated['resultId'])) {
-                $studentResult = StudentResult::find($validated['resultId']);
-                if (!$studentResult) {
-                    return response()->json(['status' => false, 'message' => 'Result not found'], 404);
-                }
+            $studentResult->fill([
+                'studentId' => $validated['studentId'],
+                'semesterId' => $validated['semesterId'],
+                'examTypeId' => $validated['examTypeId'],
+                'seatnumber' => $validated['seatnumber'],
+                'result' => $validated['result']['final_result'],
+                'total_cce_max_min' => $validated['result']['total']['cce_max_min'] ?? 0,
+                'total_see_max_min' => $validated['result']['total']['see_max_min'] ?? 0,
+                'total_marks_max_min' => $validated['result']['total']['total_max_min'] ?? 0,
+            ])->save();
 
-                $studentResult->update([
-                    'studentId' => $validated['studentId'],
-                    'semesterId' => $validated['semesterId'],
-                    'examTypeId' => $validated['examTypeId'],
-                    'seatnumber' => $validated['seatnumber'],
-                    'result' => $validated['result']['final_result'],
-                    'total_cce_max_min' => $validated['result']['total']['cce_max_min'] ?? 0,
-                    'total_see_max_min' => $validated['result']['total']['see_max_min'] ?? 0,
-                    'total_marks_max_min' => $validated['result']['total']['total_max_min'] ?? 0,
-                ]);
-            } else {
-                $studentResult = StudentResult::create([
-                    'studentId' => $validated['studentId'],
-                    'semesterId' => $validated['semesterId'],
-                    'examTypeId' => $validated['examTypeId'],
-                    'seatnumber' => $validated['seatnumber'],
-                    'result' => $validated['result']['final_result'],
-                    'total_cce_max_min' => $validated['result']['total']['cce_max_min'] ?? 0,
-                    'total_see_max_min' => $validated['result']['total']['see_max_min'] ?? 0,
-                    'total_marks_max_min' => $validated['result']['total']['total_max_min'] ?? 0,
-                ]);
-            }
-
-            // Only insert subjects if available
-            if (!empty($validated['subjects'])) {
-                foreach ($validated['subjects'] as $subject) {
-                    $exists = StudentSubjectResult::where('resultId', $studentResult->resultId)
-                        ->where('subject_name', $subject['subject_name'])
-                        ->exists();
-
-                    if ($exists) {
-                        continue;
-                    }
-
-                    // ✅ Force 000 if subject failed
-                    if (!empty($subject['is_failed']) && $subject['is_failed']) {
-                        $subject['cce_obtained'] = 0;
-                        $subject['see_obtained'] = 0;
-                        $subject['total_obtained'] = 0;
-                        $subject['marks_percentage'] = 0;
-                        $subject['grade_point'] = 0;
-                        $subject['credit_point'] = 0;
-                    }
-
-                    StudentSubjectResult::create([
+            // Insert subjects (skip duplicates)
+            foreach ($validated['subjects'] as $subject) {
+                StudentSubjectResult::updateOrCreate(
+                    [
                         'resultId' => $studentResult->resultId,
+                        'subject_name' => $subject['subject_name'],
+                    ],
+                    [
                         'subject_code' => $subject['subject_code'],
                         'subject_type' => $subject['subject_type'] ?? null,
-                        'subject_name' => $subject['subject_name'],
                         'credit' => $subject['credit'],
                         'cce_max_min' => $subject['cce_max_min'],
                         'cce_obtained' => $subject['cce_obtained'],
@@ -368,35 +332,35 @@ class StudentResultController extends Controller
                         'letter_grade' => $subject['letter_grade'] ?? null,
                         'grade_point' => $subject['grade_point'] ?? null,
                         'credit_point' => $subject['credit_point'] ?? null,
-                    ]);
-                }
+                    ]
+                );
             }
 
-            // Recalculate totals only if subjects exist
+            // Recalculate totals
             $subjects = $studentResult->subjects()->get();
 
             $totalCredits = $subjects->sum('credit');
             $totalObtained = $subjects->sum('total_obtained');
             $totalCreditPoints = $subjects->sum('credit_point');
-            $cceObtaintTotal = $subjects->sum('cce_obtained');
-            $seeObtaintTotal = $subjects->sum('see_obtained');
+            $cceObt = $subjects->sum('cce_obtained');
+            $seeObt = $subjects->sum('see_obtained');
             $sgpa = $totalCredits > 0 ? round($totalCreditPoints / $totalCredits, 2) : 0;
 
             $studentResult->update([
-                'total_credits' => $totalCredits ?? 0,
-                'total_obtained' => $totalObtained ?? 0,
-                'total_credit_points' => $totalCreditPoints ?? 0,
-                'total_cce_obt' => $cceObtaintTotal ?? 0,
-                'total_see_obt' => $seeObtaintTotal ?? 0,
-                'total_marks_obt' => ($seeObtaintTotal ?? 0) + ($cceObtaintTotal ?? 0),
-                'sgpa' => $sgpa ?? 0,
+                'total_credits' => $totalCredits,
+                'total_obtained' => $totalObtained,
+                'total_credit_points' => $totalCreditPoints,
+                'total_cce_obt' => $cceObt,
+                'total_see_obt' => $seeObt,
+                'total_marks_obt' => $cceObt + $seeObt,
+                'sgpa' => $sgpa,
             ]);
 
             DB::commit();
 
             return response()->json([
                 'status' => true,
-                'message' => 'Result saved successfully',
+                'message' => 'Result and subjects saved successfully',
                 'data' => $studentResult->load('subjects')
             ], 200);
         } catch (\Exception $e) {
