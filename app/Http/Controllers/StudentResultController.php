@@ -420,19 +420,19 @@ class StudentResultController extends Controller
                     continue;
                 }
 
-                // check if result already exists for this seatnumber
-                $exists = DB::table('student_results')
-                    ->where('seatNumber', $seatNumber)
-                    ->exists();
+                // // check if result already exists for this seatnumber
+                // $exists = DB::table('student_results')
+                //     ->where('seatNumber', $seatNumber)
+                //     ->exists();
 
-                if ($exists) {
-                    $skipped[] = [
-                        'seatNumber'   => $seatNumber,
-                        'enrollmentNo' => $enrollmentNo,
-                        'reason'       => 'Already exists'
-                    ];
-                    continue;
-                }
+                // if ($exists) {
+                //     $skipped[] = [
+                //         'seatNumber'   => $seatNumber,
+                //         'enrollmentNo' => $enrollmentNo,
+                //         'reason'       => 'Already exists'
+                //     ];
+                //     continue;
+                // }
 
                 // ✅ insert into student_results
                 $result = StudentResult::create([
