@@ -22,6 +22,7 @@ class StudentResult extends Model
         'studentId',
         'semesterId',
         'collegeId',
+        'studentClass',
         'examTypeId',
         'total_cce_max_min',
         'total_cce_obt',
