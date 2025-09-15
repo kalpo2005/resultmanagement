@@ -17,6 +17,7 @@ Route::post('examtype', [ExamTypeController::class, 'handle']);
 // Route::post('seatnumber', [StudentSeatNumberController::class, 'handle']);
 Route::post('result', [StudentResultController::class, 'handle']);
 Route::post('result/excel', [StudentResultController::class, 'importResultsExcel']);
+Route::post('result/excel/internal', [StudentResultController::class, 'importResultsInternal']);
 Route::post('resulttonode', [StudentResultController::class, 'sendResultsToNode']);
 Route::post('result/subject/autocreate', [StudentResultController::class, 'updateResultWithSubjects']);
 Route::post('result/subject', [StudentSubjectResultController::class, 'handle']);

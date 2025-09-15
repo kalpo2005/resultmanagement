@@ -438,7 +438,7 @@ class StudentResultController extends Controller
                 //     continue;
                 // }
 
-                // ✅ insert into student_results
+                // insert into student_results
                 $result = StudentResult::create([
                     'collegeId'   => $student->collegeId,
                     'studentId'   => $student->studentId,
@@ -461,12 +461,10 @@ class StudentResultController extends Controller
         }
     }
 
-    public function importResultsDynamic(Request $request)
+    public function importResultsInternal(Request $request)
     {
         try {
-            // -----------------------------
             // 1. Validate Request
-            // -----------------------------
             $validated = $request->validate([
                 'collegeId'    => 'required|exists:colleges,collegeId',
                 'semesterId'   => 'required|exists:semesters,semesterId',
@@ -478,66 +476,96 @@ class StudentResultController extends Controller
             $path = $request->file('file')->getRealPath();
             $rows = \Maatwebsite\Excel\Facades\Excel::toArray([], $path)[0];
 
-            if (count($rows) < 3) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Excel has no data'
-                ], 400);
+            if (count($rows) < 2) {
+                return response()->json(['status' => false, 'message' => 'Excel has no data'], 400);
             }
 
-            // -----------------------------
-            // 2. Extract Headers + Max/Min
-            // -----------------------------
-            $maxMinRow = $rows[1]; // second row (30/12, etc.)
-            $headers   = $rows[2]; // third row (subject names)
+            // DETECT whether first row is a label row ("MAX/MIN MARKS") or the actual max/min row.
+            $firstRowFirstCell = strtoupper(trim($rows[0][0] ?? ''));
+            $hasLabelRow = (strpos($firstRowFirstCell, 'MAX/MIN') !== false || strpos($firstRowFirstCell, 'MAX MIN') !== false);
+
+            if ($hasLabelRow) {
+                $maxMinRow    = $rows[1]; // e.g. "30/12", "25/10", ... and last col "195/76"
+                $headerRow    = $rows[2]; // headers: ROLL NO, ENROLLMENT, STUDENT NAME, subj..., TOTAL, PER, RESULT
+                $startDataRow = 3;        // student rows start from index 3
+            } else {
+                $maxMinRow    = $rows[0];
+                $headerRow    = $rows[1];
+                $startDataRow = 2;
+            }
+
+            // Normalize headers (index => trimmed header text)
+            $headers = [];
+            foreach ($headerRow as $idx => $h) {
+                $headers[$idx] = trim((string)$h);
+            }
             $totalCols = count($headers);
 
-            $seatCol   = 0; // Roll/Seat number column
-            $enrollCol = 1; // Enrollment column
+            // Helper: find header index by checking candidate words inside header text
+            $findIndex = function (array $candidates, $default = null) use ($headers) {
+                foreach ($headers as $i => $h) {
+                    $UH = strtoupper($h);
+                    foreach ($candidates as $cand) {
+                        if (strpos($UH, strtoupper($cand)) !== false) return $i;
+                    }
+                }
+                return $default;
+            };
 
-            $last3 = [
-                'total'      => $totalCols - 3,
-                'percentage' => $totalCols - 2,
-                'result'     => $totalCols - 1,
-            ];
+            // Detect core column indexes (fall back to common defaults if not found)
+            $seatCol   = $findIndex(['ROLL NO', 'ROLL', 'SEAT'], 0);
+            $enrollCol = $findIndex(['ENROLL', 'ENROLLMENT', 'ENROLLMENT NO'], 1);
+            $nameCol   = $findIndex(['STUDENT NAME', 'NAME', 'STUDENT'], 2);
+
+            // For total/per/result try to find headers; fallback to last 3 columns
+            $defaultTotalIndex = max(0, $totalCols - 3);
+            $totalCol = $findIndex(['TOTAL', 'GRAND TOTAL', 'TOTAL MARKS'], $defaultTotalIndex);
+            $percentageCol = $findIndex(['PER', 'PERCENT', 'PERCENTAGE'], $totalCols - 2);
+            $resultCol = $findIndex(['RESULT', 'STATUS'], $totalCols - 1);
+
+            // Subjects are columns between student-name and total
+            $subjectStart = $nameCol + 1;
+            $subjectEnd = $totalCol - 1;
+            if ($subjectEnd < $subjectStart) {
+                // no subjects found
+                return response()->json(['status' => false, 'message' => 'No subject columns detected in Excel'], 400);
+            }
+
+            // Extract combined TOTAL max/min raw (e.g. "195/76")
+            $totalMaxMinRaw = trim($maxMinRow[$totalCol] ?? '');
+            $totalMax = $totalMin = null;
+            if ($totalMaxMinRaw && strpos($totalMaxMinRaw, '/') !== false) {
+                [$totalMax, $totalMin] = array_map('trim', explode('/', $totalMaxMinRaw, 2));
+            }
 
             DB::beginTransaction();
             $inserted = [];
             $skipped  = [];
 
-            // -----------------------------
-            // 3. Process Each Student Row
-            // -----------------------------
-            foreach ($rows as $index => $row) {
-                if ($index < 3) continue; // skip first 3 rows (heading, max/min, headers)
+            // If your DB columns for per-subject marks are NOT NULL, we'll store 0 for missing marks.
+            // If you prefer NULL for missing marks, change the assignments below and set your DB columns nullable.
+            $defaultMissingMarkValue = 0;
 
-                $seatNumber   = trim($row[$seatCol] ?? '');
+            for ($r = $startDataRow; $r < count($rows); $r++) {
+                $row = $rows[$r];
+
+                // read seat/enroll
+                $seatNumber = trim($row[$seatCol] ?? '');
                 $enrollmentNo = trim($row[$enrollCol] ?? '');
 
                 if (!$seatNumber || !$enrollmentNo) {
-                    $skipped[] = [
-                        'seatNumber'   => $seatNumber,
-                        'enrollmentNo' => $enrollmentNo,
-                        'reason'       => 'Missing seat/enrollment'
-                    ];
+                    $skipped[] = ['row' => $r + 1, 'seatNumber' => $seatNumber, 'enrollmentNo' => $enrollmentNo, 'reason' => 'Missing seat/enrollment'];
                     continue;
                 }
 
-                // 🔎 Find student
-                $student = DB::table('students')
-                    ->where('enrollmentNumber', $enrollmentNo)
-                    ->first();
-
+                // find student by enrollment
+                $student = DB::table('students')->where('enrollmentNumber', $enrollmentNo)->first();
                 if (!$student) {
-                    $skipped[] = [
-                        'seatNumber'   => $seatNumber,
-                        'enrollmentNo' => $enrollmentNo,
-                        'reason'       => 'Student not found'
-                    ];
+                    $skipped[] = ['row' => $r + 1, 'seatNumber' => $seatNumber, 'enrollmentNo' => $enrollmentNo, 'reason' => 'Student not found'];
                     continue;
                 }
 
-                // 📝 Insert/Update student_results
+                // Insert / update main result row
                 $studentResult = StudentResult::updateOrCreate(
                     [
                         'studentId'  => $student->studentId,
@@ -545,39 +573,45 @@ class StudentResultController extends Controller
                         'examTypeId' => $validated['examTypeId'],
                     ],
                     [
-                        'collegeId'        => $student->collegeId,
-                        'seatNumber'       => $seatNumber,
-                        'studentClass'     => $validated['studentClass'],
-                        'result'           => $row[$last3['result']] ?? null,
-                        'percentage'       => $row[$last3['percentage']] ?? null,
-                        'total_marks_obt'  => $row[$last3['total']] ?? null,
+                        'collegeId'           => $student->collegeId,
+                        'seatNumber'          => $seatNumber,
+                        'studentClass'        => $validated['studentClass'],
+                        'result'              => trim($row[$resultCol] ?? null),
+                        'percentage'          => trim($row[$percentageCol] ?? null),
+                        'total_marks_obt'     => trim($row[$totalCol] ?? null),
+                        'total_marks_max_min' => $totalMaxMinRaw, // original combined string
+                        // optionally also store numeric splits if your DB has these columns:
+                        // 'total_max_marks' => is_numeric($totalMax) ? (int)$totalMax : null,
+                        // 'total_min_marks' => is_numeric($totalMin) ? (int)$totalMin : null,
                     ]
                 );
 
-                // 📚 Insert subject-wise results
-                for ($c = 3; $c < $last3['total']; $c++) {
-                    $subjectName = trim($headers[$c]);
-                    $marksObt    = trim($row[$c] ?? null);
-                    $maxMin      = trim($maxMinRow[$c] ?? null); // e.g. "30/12"
+                // Loop subject columns and insert subject results
+                for ($c = $subjectStart; $c <= $subjectEnd; $c++) {
+                    $subjectName = trim($headers[$c] ?? '');
+                    if (empty($subjectName)) continue; // skip empty header columns
 
-                    if (!$subjectName) continue;
+                    $marksRaw = $row[$c] ?? null;
+                    $marksRaw = is_string($marksRaw) ? trim($marksRaw) : $marksRaw;
 
-                    $seeMax = $seeMin = null;
-                    if ($maxMin && strpos($maxMin, '/') !== false) {
-                        [$seeMax, $seeMin] = explode('/', $maxMin);
-                    }
+                    // interpret marks: if numeric use it, otherwise use defaultMissingMarkValue
+                    $marksValue = is_numeric($marksRaw) ? (int)$marksRaw : $defaultMissingMarkValue;
 
+                    // per-subject max/min raw string from the maxMinRow
+                    $subjectMaxMinRaw = trim($maxMinRow[$c] ?? '');
+
+                    // Save (updateOrCreate)
                     StudentSubjectResult::updateOrCreate(
                         [
                             'resultId'     => $studentResult->resultId,
                             'subject_name' => $subjectName,
                         ],
                         [
-                            'see_obtained'   => is_numeric($marksObt) ? $marksObt : null,
-                            'total_obtained' => is_numeric($marksObt) ? $marksObt : null,
-                            'see_total'      => $seeMax,
-                            'max_marks'      => $seeMax,
-                            'min_marks'      => $seeMin,
+                            'subject_code'   => 1, // change if you have real codes
+                            'see_obtained'   => $marksValue,
+                            'see_max_min'    => $subjectMaxMinRaw,
+                            'total_obtained' => $marksValue,
+                            'total_max_min'  => $subjectMaxMinRaw,
                         ]
                     );
                 }
@@ -589,16 +623,13 @@ class StudentResultController extends Controller
 
             return response()->json([
                 'status'   => true,
-                'message'  => 'Dynamic Excel processed successfully',
+                'message'  => 'Internal Result successfully added',
                 'inserted' => $inserted,
                 'skipped'  => $skipped,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'message' => $e->getMessage()
-            ], 400);
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 400);
         }
     }
 }
