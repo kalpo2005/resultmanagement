@@ -594,11 +594,25 @@ class StudentResultController extends Controller
                     $marksRaw = $row[$c] ?? null;
                     $marksRaw = is_string($marksRaw) ? trim($marksRaw) : $marksRaw;
 
-                    // interpret marks: if numeric use it, otherwise use defaultMissingMarkValue
-                    $marksValue = is_numeric($marksRaw) ? (int)$marksRaw : $defaultMissingMarkValue;
-
-                    // per-subject max/min raw string from the maxMinRow
                     $subjectMaxMinRaw = trim($maxMinRow[$c] ?? '');
+
+                    // Detect absent
+                    $isAbsent = false;
+                    if (is_string($marksRaw)) {
+                        $upper = strtoupper($marksRaw);
+                        if (in_array($upper, ['AB', 'ABS', 'A.B.', 'A.B', 'ABSENT'])) {
+                            $isAbsent = true;
+                        }
+                    }
+
+                    // If absent, marks = 0, but keep "AB" in max/min field
+                    if ($isAbsent) {
+                        $marksValue = 0;
+                        $marksNote  = 'AB';
+                    } else {
+                        $marksValue = is_numeric($marksRaw) ? (int)$marksRaw : 0;
+                        $marksNote  = $subjectMaxMinRaw; // keep original max/min value
+                    }
 
                     // Save (updateOrCreate)
                     StudentSubjectResult::updateOrCreate(
@@ -607,11 +621,11 @@ class StudentResultController extends Controller
                             'subject_name' => $subjectName,
                         ],
                         [
-                            'subject_code'   => 1, // change if you have real codes
+                            'subject_code'   => 1, // change if you have codes
                             'see_obtained'   => $marksValue,
-                            'see_max_min'    => $subjectMaxMinRaw,
+                            'see_max_min'    => $marksNote,
                             'total_obtained' => $marksValue,
-                            'total_max_min'  => $subjectMaxMinRaw,
+                            'total_max_min'  => $marksNote,
                         ]
                     );
                 }
