@@ -53,7 +53,7 @@ class AuthController extends Controller
                 'status'       => true,
                 'access_token' => $token,
                 'token_type'   => 'bearer',
-                'expires_in'   => config('constants.jwt_ttl') * 60,
+                'expires_in'   => config('constants.jwt_ttl'),
                 'user'         => $user
             ]);
         } catch (\Throwable $e) {
@@ -86,7 +86,7 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type'   => 'bearer',
-            'expires_in'   => config('constants.jwt_ttl') * 60, // seconds
+            'expires_in'   => config('constants.jwt_ttl'), // seconds
             'user'         => $user ? [
                 'id'        => $user->userId,
                 'firstName' => $user->firstName,
