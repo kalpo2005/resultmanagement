@@ -12,7 +12,7 @@ use App\Http\Controllers\StudentResultController;
 use App\Http\Controllers\StudentSubjectResultController;
 
 // Public route
-Route::post('login', [AuthController::class, 'login']);
+Route::post('loginadmin', [AuthController::class, 'login']);
 
 // Protected routes
 Route::middleware(['jwt.auth'])->group(function () {
@@ -25,6 +25,7 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::post('student', [StudentController::class, 'handle']);
     Route::post('student/excel', [StudentController::class, 'uploadExcel']);
     Route::post('examtype', [ExamTypeController::class, 'handle']);
+    Route::get('examtype/dropdown', [ExamTypeController::class, 'dropdown']);
     Route::post('user', [UserController::class, 'handle']);
     Route::post('role', [RoleController::class, 'handle']);
     Route::post('result', [StudentResultController::class, 'handle']);

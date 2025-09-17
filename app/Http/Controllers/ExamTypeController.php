@@ -46,11 +46,9 @@ class ExamTypeController extends Controller
                 'message' => 'Exam type inserted successfully',
                 'data' => $examType
             ], 201);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             $firstMessage = collect($e->errors())->flatten()->first();
             return response()->json(['status' => false, 'message' => $firstMessage], 422);
-
         } catch (\Exception $e) {
             // Catch duplicate alias error from the model
             return response()->json(['status' => false, 'message' => $e->getMessage()], 400);
@@ -89,11 +87,9 @@ class ExamTypeController extends Controller
                 'message' => 'Exam type updated successfully',
                 'data' => $examType
             ], 200);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             $firstMessage = collect($e->errors())->flatten()->first();
             return response()->json(['status' => false, 'message' => $firstMessage], 422);
-
         } catch (\Exception $e) {
             // Catch duplicate alias error from the model
             return response()->json(['status' => false, 'message' => $e->getMessage()], 400);
@@ -126,7 +122,7 @@ class ExamTypeController extends Controller
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where('examName', 'like', "%{$search}%")
-                  ->orWhere('academicYear', 'like', "%{$search}%");
+                ->orWhere('academicYear', 'like', "%{$search}%");
         }
 
         $filterable = ['examTypeId', 'examName', 'academicYear', 'status', 'alias'];
@@ -141,6 +137,20 @@ class ExamTypeController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Exam types fetched successfully',
+            'data' => $examTypes
+        ], 200);
+    }
+
+    //dropdown api 
+    public function dropdown()
+    {
+        $examTypes = ExamType::where('status', 1)
+            ->select('examTypeId', 'examName', 'status')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Exam types for dropdown fetched successfully',
             'data' => $examTypes
         ], 200);
     }
