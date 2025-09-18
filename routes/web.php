@@ -7,6 +7,6 @@ Route::get('/', function () {
 });
 
 Route::post('/hello', function () {
-    return 'Hello, routes are working ✅';
+    return 'Hello, roucccccccccccctes are working ✅';
 });
 
