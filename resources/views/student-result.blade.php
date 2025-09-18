@@ -7,17 +7,20 @@
     <title>Student Result Portal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" xintegrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         /* Core Styles & Variables */
         :root {
-            --bg-dark: #111827;
+            --bg-dark: #0D1117;
             --primary-dark: #1F2937;
             --secondary-dark: #374151;
-            --border-dark: #4B5563;
+            --border-dark: #30363d;
             --text-light: #F9FAFB;
             --text-muted: #9CA3AF;
             --accent-color: #4F46E5;
             --accent-hover: #4338CA;
+            --success-color: #16A34A;
+            --error-color: #DC2626;
         }
 
         body {
@@ -35,7 +38,6 @@
         main {
             width: 100%;
             max-width: 56rem;
-            /* Equivalent to max-w-4xl */
             margin: auto;
         }
 
@@ -44,7 +46,8 @@
             background-color: var(--primary-dark);
             padding: 2rem;
             border-radius: 1.5rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-dark);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
         }
 
@@ -93,6 +96,7 @@
             border: 1px solid var(--border-dark);
             border-radius: 0.375rem;
             transition: all 0.3s ease;
+            box-sizing: border-box;
         }
 
         .form-input:focus,
@@ -166,8 +170,8 @@
         .result-overlay {
             position: fixed;
             inset: 0;
-            background-color: rgba(17, 24, 39, 0.5);
-            backdrop-filter: blur(4px);
+            background-color: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -180,74 +184,98 @@
 
         .result-section {
             width: 100%;
-            max-width: 56rem;
-            /* max-w-4xl */
+            max-width: 64rem;
+            /* max-w-5xl */
             max-height: 90vh;
             overflow-y: auto;
             position: relative;
         }
 
+        /* Scrollbar styles for result section */
+        .result-section::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .result-section::-webkit-scrollbar-track {
+            background: var(--primary-dark);
+            border-radius: 10px;
+        }
+
+        .result-section::-webkit-scrollbar-thumb {
+            background: var(--secondary-dark);
+            border-radius: 10px;
+        }
+
+        .result-section::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
         .result-card {
             background-color: var(--primary-dark);
             color: var(--text-light);
-            padding: 2rem;
+            padding: 2.5rem;
             border-radius: 1.5rem;
+            border: 1px solid var(--border-dark);
         }
 
-        .result-header {
+        .card-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            border-bottom: 1px solid var(--border-dark);
-            padding-bottom: 1rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
 
-        .result-header h2 {
-            font-size: 1.25rem;
+        .card-header h2 {
+            font-size: 1.5rem;
             font-weight: bold;
+            margin: 0;
         }
 
-        .result-header p {
+        .card-header p {
             color: var(--text-muted);
+            margin: 0.25rem 0 0;
         }
 
-        .btn-print,
-        .btn-close {
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-icon {
             background-color: var(--secondary-dark);
             color: var(--text-muted);
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
+            border: 1px solid var(--border-dark);
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 9999px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            transition: background-color 0.3s ease;
+            justify-content: center;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        .btn-print:hover,
-        .btn-close:hover {
+        .btn-icon:hover {
             background-color: #4B5563;
+            color: var(--text-light);
         }
 
-        .btn-close {
-            position: absolute;
-            top: 0.75rem;
-            right: 0.75rem;
-            padding: 0.5rem;
-            z-index: 10;
+        .result-card hr {
+            border: 0;
+            height: 1px;
+            background-color: var(--border-dark);
+            margin: 1.5rem 0;
         }
 
-        .student-info {
-            display: grid;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
+        .student-info-block {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
         }
 
         .student-photo {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-shrink: 0;
         }
 
         .student-photo img {
@@ -255,23 +283,33 @@
             height: 7rem;
             border-radius: 9999px;
             object-fit: cover;
-            border: 4px solid var(--border-dark);
+            background-color: var(--secondary-dark);
+            border: 2px solid var(--border-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
         }
 
-        .student-details {
+        .student-details-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem 1.5rem;
-            font-size: 0.75rem;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem 2.5rem;
+            font-size: 0.875rem;
+            flex-grow: 1;
         }
 
-        .student-details div strong {
+        .student-details-grid div strong {
             color: var(--text-muted);
             display: block;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
         }
 
-        .student-details div span {
+        .student-details-grid div span {
             font-weight: 600;
+            font-size: 1rem;
         }
 
         /* Marks Table */
@@ -286,28 +324,31 @@
             border-collapse: collapse;
         }
 
-        .marks-table thead {
-            background-color: var(--bg-dark);
-        }
-
         .marks-table th,
         .marks-table td {
-            padding: 0.75rem;
-            border: 1px solid var(--border-dark);
-        }
-
-        .marks-table th {
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-
-        .marks-table tbody tr {
+            padding: 1rem 0.75rem;
             border-bottom: 1px solid var(--border-dark);
         }
 
+        .marks-table thead th {
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom-width: 2px;
+        }
+
+        .marks-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
         .marks-table tfoot {
-            background-color: var(--bg-dark);
             font-weight: bold;
+        }
+
+        .marks-table tfoot td {
+            border-top: 2px solid var(--border-dark);
+            color: var(--text-light);
         }
 
         .marks-table .text-center {
@@ -321,28 +362,34 @@
         /* Result Summary */
         .result-summary {
             display: grid;
-            gap: 1rem;
-            margin-top: 1.5rem;
-            text-align: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            grid-template-columns: repeat(3, 1fr);
         }
 
         .summary-box {
-            padding: 0.75rem;
-            border-radius: 0.5rem;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
         }
 
         .summary-box p:first-child {
-            font-size: 0.75rem;
+            font-size: 0.875rem;
             font-weight: 600;
+            margin: 0 0 0.5rem;
+            text-transform: uppercase;
         }
 
         .summary-box p:last-child {
-            font-size: 1.25rem;
+            font-size: 2rem;
             font-weight: bold;
+            margin: 0;
+            line-height: 1;
         }
 
         .summary-sgpa {
-            background-color: rgba(79, 70, 229, 0.2);
+            background: linear-gradient(145deg, rgba(79, 70, 229, 0.4), rgba(99, 102, 241, 0.2));
+            border: 1px solid rgba(99, 102, 241, 0.5);
         }
 
         .summary-sgpa p:first-child {
@@ -350,7 +397,8 @@
         }
 
         .summary-result.pass {
-            background-color: rgba(22, 163, 74, 0.2);
+            background: linear-gradient(145deg, rgba(22, 163, 74, 0.4), rgba(34, 197, 94, 0.2));
+            border: 1px solid rgba(34, 197, 94, 0.5);
         }
 
         .summary-result.pass p:first-child {
@@ -358,7 +406,8 @@
         }
 
         .summary-result.fail {
-            background-color: rgba(220, 38, 38, 0.2);
+            background: linear-gradient(145deg, rgba(220, 38, 38, 0.4), rgba(239, 68, 68, 0.2));
+            border: 1px solid rgba(239, 68, 68, 0.5);
         }
 
         .summary-result.fail p:first-child {
@@ -367,6 +416,7 @@
 
         .summary-cgpa {
             background-color: var(--secondary-dark);
+            border: 1px solid var(--border-dark);
         }
 
         .summary-cgpa p:first-child {
@@ -377,7 +427,7 @@
         .dialog-box {
             position: fixed;
             inset: 0;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.7);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -446,14 +496,6 @@
             .form-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
-
-            .student-info {
-                grid-template-columns: 1fr 2fr;
-            }
-
-            .result-summary {
-                grid-template-columns: repeat(3, 1fr);
-            }
         }
 
         @media (min-width: 1024px) {
@@ -462,10 +504,88 @@
             }
         }
 
+        @media (max-width: 768px) {
+            .student-info-block {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .student-details-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .result-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* PDF Export Specific Styles */
+        .pdf-export-mode .result-card {
+            padding: 1.5rem;
+            box-shadow: none;
+            border: none;
+        }
+
+        .pdf-export-mode .card-header h2 {
+            font-size: 1.3rem;
+        }
+
+        .pdf-export-mode .student-info-block {
+            margin-bottom: 1.5rem;
+        }
+
+        .pdf-export-mode .student-photo img {
+            width: 5.5rem;
+            height: 5.5rem;
+        }
+
+        .pdf-export-mode .student-details-grid {
+            font-size: 0.8rem;
+            gap: 0.5rem 2rem;
+        }
+
+        .pdf-export-mode .student-details-grid div span {
+            font-size: 0.9rem;
+        }
+
+        .pdf-export-mode .marks-table {
+            font-size: 0.8rem;
+        }
+
+        .pdf-export-mode .marks-table th,
+        .pdf-export-mode .marks-table td {
+            padding: 0.6rem 0.75rem;
+        }
+
+        .pdf-export-mode .result-summary {
+            margin-top: 1.5rem;
+            gap: 1rem;
+        }
+
+        .pdf-export-mode .summary-box {
+            padding: 1rem;
+        }
+
+        .pdf-export-mode .summary-box p:first-child {
+            font-size: 0.75rem;
+        }
+
+        .pdf-export-mode .summary-box p:last-child {
+            font-size: 1.6rem;
+        }
+
+        .pdf-export-mode .action-buttons {
+            display: none !important;
+        }
+
         /* Print Styles */
         @media print {
             body {
                 background-color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
 
             body * {
@@ -477,6 +597,9 @@
                 background: none;
                 backdrop-filter: none;
                 padding: 0;
+                display: block;
+                opacity: 1;
+                pointer-events: auto;
             }
 
             .printable-area,
@@ -490,8 +613,8 @@
                 width: 100%;
                 max-height: none;
                 overflow: visible;
-                background-color: white !important;
                 box-shadow: none;
+                display: block;
             }
 
             .result-card {
@@ -499,6 +622,15 @@
                 border: 1px solid #ccc;
                 border-radius: 0;
                 padding: 1.5rem;
+                box-shadow: none;
+            }
+
+            .action-buttons {
+                display: none;
+            }
+
+            .result-card hr {
+                background-color: #ccc !important;
             }
 
             .marks-table,
@@ -507,9 +639,18 @@
                 border-color: #ddd !important;
             }
 
-            .marks-table thead,
-            .marks-table tfoot {
+            .marks-table thead th {
                 background-color: #f9f9f9 !important;
+            }
+
+            .marks-table tfoot td {
+                background-color: #f9f9f9 !important;
+                border-top-width: 1px;
+            }
+
+            .student-photo img {
+                border-color: #ddd !important;
+                background-color: #eee !important;
             }
 
             .summary-box {
@@ -517,23 +658,23 @@
                 border: 1px solid #ddd;
             }
 
-            .btn-print,
-            .btn-close {
-                display: none;
+            .summary-sgpa,
+            .summary-result,
+            .summary-cgpa {
+                background: #f0f0f0 !important;
             }
         }
     </style>
 </head>
 
 <body>
-
     <main>
+        <!-- Form Section -->
         <div class="form-container">
             <div class="form-header">
                 <h1>Student Result Portal</h1>
                 <p>Enter your details to view your exam result.</p>
             </div>
-
             <form id="result-form">
                 <div class="form-grid">
                     <div class="form-group">
@@ -581,28 +722,30 @@
         </div>
     </main>
 
+    <!-- Result Overlay -->
     <div id="result-overlay" class="result-overlay">
-        <div id="result-section" class="result-section printable-area">
-            <div class="result-card">
-                <button id="closeResultBtn" class="btn-close">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:1.5rem; height:1.5rem;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-                <div class="result-header">
+        <div id="result-section" class="result-section">
+            <div class="result-card printable-area">
+                <div class="card-header">
                     <div>
                         <h2>Statement of Marks</h2>
                         <p id="examName"></p>
                     </div>
-                    <button id="printBtn" class="btn-print">
-                        <i class="fas fa-print" style="margin-right: 0.5rem;"></i> Print
-                    </button>
+                    <div class="action-buttons">
+                        <button id="downloadBtn" class="btn-icon" title="Download PDF">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button id="closeResultBtn" class="btn-icon" title="Close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="student-info">
+                <hr>
+                <div class="student-info-block">
                     <div class="student-photo">
                         <img id="profileImage" src="https://placehold.co/150x150/374151/9CA3AF?text=?" alt="Student Profile Image">
                     </div>
-                    <div class="student-details">
+                    <div class="student-details-grid">
                         <div><strong>Student Name:</strong> <span id="studentName"></span></div>
                         <div><strong>Seat No:</strong> <span id="seatNo"></span></div>
                         <div><strong>Semester:</strong> <span id="semesterName"></span></div>
@@ -652,6 +795,7 @@
         </div>
     </div>
 
+    <!-- Dialog Box for errors -->
     <div id="dialog-box" class="dialog-box">
         <div id="dialog-content" class="dialog-content">
             <div id="dialog-icon" class="dialog-icon"></div>
@@ -669,7 +813,7 @@
             const btnText = document.getElementById('btn-text');
             const resultOverlay = document.getElementById('result-overlay');
             const closeResultBtn = document.getElementById('closeResultBtn');
-            const printBtn = document.getElementById('printBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
 
             // Dialog elements
             const dialogBox = document.getElementById('dialog-box');
@@ -681,7 +825,7 @@
 
             // API Configuration
             const API_BASE_URL = 'http://127.0.0.1:8000/api';
-            const jwtToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luYWRtaW4iLCJpYXQiOjE3NTgxMjIxMDgsImV4cCI6MTc1ODEyNTcwOCwibmJmIjoxNzU4MTIyMTA4LCJqdGkiOiJQZ3N3akp6MVdyWXY2ekN1Iiwic3ViIjoiMSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.bYfYNJgRUGYK8zAZ-YL3N6CYw89wY3TSBXKnzfY4s9U";
+            const jwtToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luYWRtaW4iLCJpYXQiOjE3NTgxOTc0MjksImV4cCI6MTc1ODIwMTAyOSwibmJmIjoxNzU4MTk3NDI5LCJqdGkiOiJPSEVOMTNGZlh6MDBPMW1hIiwic3ViIjoiMSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.7FeQRJX9Jgl1zyONuudmwzma10ci68Xh3mmF0HFXoVs";
 
             const showLoader = (show) => {
                 loader.classList.toggle('hidden', !show);
@@ -743,14 +887,11 @@
                     examTypeId: data.examTypeId,
                     seatNumber: data.seatNumber
                 };
-                if (data.semesterId) {
-                    payload.semesterId = data.semesterId;
-                }
-                if (data.studentClass) {
-                    payload.studentClass = data.studentClass;
-                }
+                if (data.semesterId) payload.semesterId = data.semesterId;
+                if (data.studentClass) payload.studentClass = data.studentClass;
 
                 try {
+                    // Fetch general result data
                     const response1 = await fetch(`${API_BASE_URL}/result`, {
                         method: 'POST',
                         headers: {
@@ -766,10 +907,9 @@
                     if (!result1.status || result1.data.length === 0) {
                         throw new Error(result1.message || 'No result found for the provided details.');
                     }
-
-                    const resultId = result1.data[0].resultId;
                     const generalResultData = result1.data[0];
 
+                    // Fetch subject-wise result data
                     const response2 = await fetch(`${API_BASE_URL}/result/subject`, {
                         method: 'POST',
                         headers: {
@@ -779,7 +919,7 @@
                         },
                         body: JSON.stringify({
                             action: 'getall',
-                            resultId: resultId
+                            resultId: generalResultData.resultId
                         })
                     });
 
@@ -810,7 +950,8 @@
                 if (student.profileImage) {
                     profileImg.src = student.profileImage;
                 } else {
-                    profileImg.src = `https://placehold.co/150x150/374151/9CA3AF?text=${student.firstName.charAt(0)}`;
+                    const firstNameInitial = student.firstName ? student.firstName.charAt(0).toUpperCase() : '?';
+                    profileImg.src = `https://placehold.co/150x150/374151/E0E2E5?text=${firstNameInitial}`;
                 }
 
                 const marksBody = document.getElementById('marks-body');
@@ -827,9 +968,13 @@
                     grandTotalObt += Number(subject.total_obtained) || 0;
                     marksBody.innerHTML += `
                 <tr>
-                    <td>${subject.subject_code}</td><td>${subject.subject_name}</td><td class="text-center">${subject.credit}</td>
-                    <td class="text-center">${subject.letter_grade}</td><td class="text-center">${subject.cce_obtained}/${subject.cce_max_min.split('/')[0]}</td>
-                    <td class="text-center">${subject.see_obtained}/${subject.see_max_min.split('/')[0]}</td><td class="text-center">${subject.total_obtained}/${subject.total_max_min.split('/')[0]}</td>
+                    <td>${subject.subject_code}</td>
+                    <td>${subject.subject_name}</td>
+                    <td class="text-center">${subject.credit}</td>
+                    <td class="text-center">${subject.letter_grade}</td>
+                    <td class="text-center">${subject.cce_obtained}/${subject.cce_max_min.split('/')[0]}</td>
+                    <td class="text-center">${subject.see_obtained}/${subject.see_max_min.split('/')[0]}</td>
+                    <td class="text-center">${subject.total_obtained}/${subject.total_max_min.split('/')[0]}</td>
                 </tr>`;
                 });
 
@@ -844,13 +989,50 @@
                 const resultStatusEl = document.getElementById('resultStatus');
                 const resultContainer = document.getElementById('resultStatusContainer');
                 resultStatusEl.textContent = generalData.result || 'N/A';
-                resultContainer.className = 'summary-box summary-result'; // Reset
+                resultContainer.className = 'summary-box summary-result'; // Reset classes
                 resultContainer.classList.add(generalData.result?.toLowerCase() === 'pass' ? 'pass' : 'fail');
 
                 showResultOverlay();
             };
 
-            printBtn.addEventListener('click', () => window.print());
+            const downloadResultAsPDF = () => {
+                const printableArea = document.querySelector('.printable-area');
+                const studentName = document.getElementById('studentName').textContent.trim().replace(/\s+/g, '_') || 'student';
+                const seatNo = document.getElementById('seatNo').textContent.trim() || 'seatno';
+                const filename = `Result_${studentName}_${seatNo}.pdf`;
+
+                const opt = {
+                    margin: 0.4,
+                    filename: filename,
+                    image: {
+                        type: 'jpeg',
+                        quality: 0.98
+                    },
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true
+                    },
+                    jsPDF: {
+                        unit: 'in',
+                        format: 'a4',
+                        orientation: 'portrait'
+                    },
+                    pagebreak: {
+                        mode: 'avoid-all'
+                    }
+                };
+
+                // Add a class to the body to apply PDF-specific styles
+                document.body.classList.add('pdf-export-mode');
+
+                // Generate the PDF
+                html2pdf().from(printableArea).set(opt).save().then(() => {
+                    // Remove the class after the PDF is saved to restore original styles
+                    document.body.classList.remove('pdf-export-mode');
+                });
+            };
+
+            downloadBtn.addEventListener('click', downloadResultAsPDF);
         });
     </script>
 </body>

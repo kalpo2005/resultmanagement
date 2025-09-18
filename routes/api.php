@@ -28,13 +28,11 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('examtype/dropdown', [ExamTypeController::class, 'dropdown']);
     Route::post('user', [UserController::class, 'handle']);
     Route::post('role', [RoleController::class, 'handle']);
-    Route::post('result', [StudentResultController::class, 'handle']);
     Route::post('result/excel', [StudentResultController::class, 'importResultsExcel']);
     Route::post('result/excel/internal', [StudentResultController::class, 'importResultsInternal']);
     Route::post('resulttonode', [StudentResultController::class, 'sendResultsToNode']);
     Route::post('result/subject/autocreate', [StudentResultController::class, 'updateResultWithSubjects']);
-    Route::post('result/subject', [StudentSubjectResultController::class, 'handle']);
-
+    
     Route::get('result/subject', function () {
         return response()->json([
             'status' => true,
@@ -42,3 +40,6 @@ Route::middleware(['jwt.auth'])->group(function () {
         ]);
     });
 });
+
+Route::post('result/subject', [StudentSubjectResultController::class, 'handle']);
+Route::post('result', [StudentResultController::class, 'handle']);
