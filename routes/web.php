@@ -7,6 +7,10 @@ Route::get('/', function () {
 });
 
 Route::post('/hello', function () {
-    return 'Hello, roucccccccccccctes are working ✅';
+    return 'Hello, rouccccccccccccjjjtes are working ✅';
+});
+
+Route::post('/hii', function () {
+    return 'Hello, rouccccccccccccjjjtes are working ✅';
 });
 
