@@ -824,7 +824,8 @@
             const dialogClose = document.getElementById('dialog-close');
 
             // API Configuration
-            const API_BASE_URL = 'http://127.0.0.1:8000/api';
+        const API_BASE_URL = "{{ config('constant.api_base_url') }}";
+
             const jwtToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luYWRtaW4iLCJpYXQiOjE3NTgxOTc0MjksImV4cCI6MTc1ODIwMTAyOSwibmJmIjoxNzU4MTk3NDI5LCJqdGkiOiJPSEVOMTNGZlh6MDBPMW1hIiwic3ViIjoiMSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.7FeQRJX9Jgl1zyONuudmwzma10ci68Xh3mmF0HFXoVs";
 
             const showLoader = (show) => {
