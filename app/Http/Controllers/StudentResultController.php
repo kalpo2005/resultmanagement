@@ -40,6 +40,8 @@ class StudentResultController extends Controller
                 'semesterId' => 'required|exists:semesters,semesterId',
                 'collegeId' => 'required|exists:colleges,collegeId',
                 'examTypeId' => 'required|exists:exam_types,examTypeId',
+                'examsource' => 'required|in:UNIVERSITY,INTERNAL',
+
 
                 'studentClass' => 'nullable|string',
                 'total_cce_max_min' => 'nullable|string',
@@ -88,6 +90,8 @@ class StudentResultController extends Controller
                 'examTypeId' => 'sometimes|exists:exam_types,examTypeId',
                 'collegeId' => 'sometimes|exists:colleges,collegeId',
                 'studentClass' => 'sometimes|string',
+                'examsource' => 'sometimes|in:UNIVERSITY,INTERNAL',
+
 
                 'total_cce_max_min' => 'nullable|string',
                 'total_cce_obt' => 'nullable|integer',
@@ -162,6 +166,7 @@ class StudentResultController extends Controller
             'studentId',
             'semesterId',
             'collegeId',
+            'examsource',
             'studentClass',
             'examTypeId',
             'total_cce_max_min',

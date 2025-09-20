@@ -218,6 +218,7 @@ class StudentSubjectResultController extends Controller
             'message' => 'Result found successfully',
             'data' => [
                 'student' => $result->student,
+                'college' => $result->student->college,
                 'semester' => $result->semester,
                 'examType' => $result->examType,
                 'result' => [

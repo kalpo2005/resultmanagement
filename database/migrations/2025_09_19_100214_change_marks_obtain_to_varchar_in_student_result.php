@@ -31,6 +31,7 @@ return new class extends Migration
             $table->integer('total_cce_obt')->change();
             $table->integer('total_see_obt')->change();
             $table->integer('total_marks_obt')->change();
+            $table->enum('examsource', ['UNIVERSITY', 'INTERNAL'])->nullable()->default(null);
         });
         Schema::table('student_subject_results', function (Blueprint $table) {
             $table->integer('cce_obtained')->change();
