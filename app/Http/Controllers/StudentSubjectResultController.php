@@ -221,7 +221,9 @@ class StudentSubjectResultController extends Controller
                 'college' => $result->student->college,
                 'semester' => $result->semester,
                 'examType' => $result->examType,
+                'examsource' => $result->examsource,
                 'result' => [
+                    'seatNumber' => $result->seatNumber,
                     'final_result' => $result->result,
                     'total_cce_obt' => $result->total_cce_obt,
                     'total_cce_max_min' => $result->total_cce_max_min ,

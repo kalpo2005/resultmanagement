@@ -42,10 +42,6 @@
             margin: auto;
         }
 
-        .d-none {
-            display: none !important;
-        }
-
         /* Form Container */
         .form-container {
             background-color: var(--primary-dark);
@@ -222,9 +218,8 @@
         }
 
         .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            position: relative;
+            text-align: center;
             margin-bottom: 1rem;
         }
 
@@ -240,6 +235,10 @@
         }
 
         .action-buttons {
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
             display: flex;
             gap: 0.75rem;
         }
@@ -394,7 +393,7 @@
         }
 
         .summary-sgpa {
-            background: linear-gradient(145deg, rgba(79, 70, 229, 0.4), rgba(99, 102, 241, 0.2));
+            background: linear-gradient(145deg, #4438cad7, #4e46e5da);
             border: 1px solid rgba(99, 102, 241, 0.5);
         }
 
@@ -403,7 +402,7 @@
         }
 
         .summary-result.pass {
-            background: linear-gradient(145deg, rgba(22, 163, 74, 0.4), rgba(34, 197, 94, 0.2));
+            background: linear-gradient(145deg, #059668db, #1fd397d1);
             border: 1px solid rgba(34, 197, 94, 0.5);
         }
 
@@ -412,7 +411,7 @@
         }
 
         .summary-result.fail {
-            background: linear-gradient(145deg, rgba(220, 38, 38, 0.4), rgba(239, 68, 68, 0.2));
+            background: linear-gradient(145deg, #dc2626e0, #ef4444d6);
             border: 1px solid rgba(239, 68, 68, 0.5);
         }
 
@@ -421,7 +420,7 @@
         }
 
         .summary-percentage {
-            background: linear-gradient(145deg, rgba(59, 130, 246, 0.4), rgba(96, 165, 250, 0.2));
+            background: linear-gradient(145deg, #2564ebd1, #3b83f6d8);
             border: 1px solid rgba(96, 165, 250, 0.5);
         }
 
@@ -526,112 +525,49 @@
         }
 
         /* PDF Export Specific Styles */
+        body.pdf-export-mode {
+             background-color: white !important;
+        }
+        body.pdf-export-mode .result-overlay {
+            overflow: visible;
+            background: none;
+            backdrop-filter: none;
+            display: block;
+            position: static;
+            padding: 0;
+            z-index: 100;
+        }
+        
+        body.pdf-export-mode .result-section {
+            max-height: none;
+            overflow: visible;
+        }
+
         .pdf-export-mode .result-card {
+            width: 1024px;
+            box-sizing: border-box;
+            margin: 0;
             padding: 1.5rem;
-            box-shadow: none;
-            border: 1px solid #ccc;
-            border-radius: 0;
-            color: black !important;
-        }
-
-        .pdf-export-mode .result-card * {
-            color: black !important;
-            border-color: #ddd !important;
-        }
-
-        .pdf-export-mode .card-header h2 {
-            font-size: 16pt;
-        }
-
-        .pdf-export-mode .card-header p {
+            border-radius: 0.5rem;
             font-size: 10pt;
+            box-shadow: none !important;
         }
-
-        .pdf-export-mode hr {
-            background-color: #ccc !important;
-        }
-
-        .pdf-export-mode .student-info-block {
-            margin-bottom: 1.5rem;
-            gap: 1.5rem;
-        }
-
-        .pdf-export-mode .student-photo img {
-            width: 6rem;
-            height: 6rem;
-            border-color: #ccc !important;
-        }
-
-        .pdf-export-mode .student-details-grid {
-            font-size: 9pt;
-            gap: 0.5rem 2rem;
-        }
-
-        .pdf-export-mode .student-details-grid div strong {
-            font-size: 9pt;
-            color: #555 !important;
-        }
-
-        .pdf-export-mode .student-details-grid div span {
-            font-size: 10pt;
-            font-weight: bold;
-        }
-
-        .pdf-export-mode .marks-table {
-            font-size: 8pt;
-            width: 100%;
-        }
-
+        
+        .pdf-export-mode .card-header h2 { font-size: 16pt; }
+        .pdf-export-mode .card-header p { font-size: 11pt; }
+        .pdf-export-mode .student-info-block { margin-bottom: 1.5rem; gap: 1.5rem; }
+        .pdf-export-mode .student-photo img { width: 6rem; height: 6rem; }
+        .pdf-export-mode .student-details-grid { font-size: 10pt; gap: 0.5rem 2rem; }
+        .pdf-export-mode .student-details-grid div span { font-size: 11pt; }
+        .pdf-export-mode .marks-table { font-size: 8.5pt; }
         .pdf-export-mode .marks-table th,
-        .pdf-export-mode .marks-table td {
-            padding: 0.4rem 0.5rem;
-            border: 1px solid #ddd;
-        }
+        .pdf-export-mode .marks-table td { padding: 0.4rem 0.5rem; }
+        .pdf-export-mode .result-summary { margin-top: 1.5rem; gap: 1rem; }
+        .pdf-export-mode .summary-box { padding: 1.2rem; }
+        .pdf-export-mode .summary-box p:first-child { font-size: 9pt; }
+        .pdf-export-mode .summary-box p:last-child { font-size: 16pt; }
+        .pdf-export-mode .action-buttons { display: none !important; }
 
-        .pdf-export-mode .marks-table thead th {
-            background-color: #f2f2f2 !important;
-        }
-
-        .pdf-export-mode .marks-table tfoot td {
-            background-color: #f2f2f2 !important;
-        }
-
-        .pdf-export-mode .result-summary {
-            margin-top: 1.5rem;
-            gap: 1rem;
-        }
-
-        .pdf-export-mode .summary-box {
-            padding: 1rem;
-            background: #f2f2f2 !important;
-            border: 1px solid #ddd;
-        }
-
-        .pdf-export-mode .summary-box p:first-child {
-            font-size: 8pt;
-        }
-
-        .pdf-export-mode .summary-box p:last-child {
-            font-size: 14pt;
-        }
-
-        .pdf-export-mode .action-buttons {
-            display: none !important;
-        }
-
-        /* Hide scrollbars inside PDF */
-        .pdf-export-mode .table-container {
-            overflow: visible !important;
-            /* allow full table width */
-        }
-
-        .pdf-export-mode .table-container::-webkit-scrollbar {
-            display: none !important;
-        }
-
-        .pdf-export-mode .action-buttons {
-            display: none !important;
-        }
     </style>
 </head>
 
@@ -674,8 +610,8 @@
                         <input type="radio" id="classA" name="studentClass" value="A"><label for="classA">A</label>
                         <input type="radio" id="classB" name="studentClass" value="B"><label for="classB">B</label>
                         <input type="radio" id="classC" name="studentClass" value="C"><label for="classC">C</label>
-                        <input type="radio" id="classD" name="studentClass" value="D"><label for="classD">D</label>
-                        <input type="radio" id="classD" name="studentClass" value="D" checked><label for="classD">E</label>
+                        <input type="radio" id="classD" name="studentClass" value="D" checked><label for="classD">D</label>
+                        <input type="radio" id="classE" name="studentClass" value="E"><label for="classE">E</label>
                     </div>
                 </div>
             </form>
@@ -687,13 +623,13 @@
         <div id="result-section" class="result-section">
             <div class="result-card printable-area">
                 <div class="card-header">
-                    <div style="text-align: center; width: 100%;">
-                        <h2 id="collegeName" style="margin-top: 4px; font-weight: 600;"></h2>
-                        <h4>Statement of Marks</h4>
+                    <div class="header-text">
+                        <h2 id="collegeName"></h2>
+                        <p>Statement of Marks</p>
                         <p id="examName"></p>
                     </div>
                     <div class="action-buttons">
-                        <button id="downloadBtn" class="btn-icon d-none" title="Download PDF">
+                        <button id="downloadBtn" class="btn-icon" title="Download PDF">
                             <i class="fas fa-download"></i>
                         </button>
                         <button id="closeResultBtn" class="btn-icon" title="Close">
@@ -710,46 +646,17 @@
                         <div><strong>Student Name:</strong> <span id="studentName"></span></div>
                         <div><strong>Seat No:</strong> <span id="seatNo"></span></div>
                         <div><strong>Semester:</strong> <span id="semesterName"></span></div>
+                        <div><strong>Enrollment No:</strong> <span id="EnrollmentNO"></span></div>
                     </div>
                 </div>
                 <div class="table-container">
                     <table class="marks-table">
-                        <thead>
-                            <tr>
-                                <th rowspan="2">Code</th>
-                                <th rowspan="2">Subject Name</th>
-                                <th rowspan="2" class="text-center">Credit</th>
-                                <th rowspan="2" class="text-center">Grade</th>
-                                <th colspan="2" class="text-center">CCE</th>
-                                <th colspan="2" class="text-center">SEE</th>
-                                <th colspan="2" class="text-center">Total</th>
-                            </tr>
-                            <tr>
-                                <th class="text-center">Max/Min</th>
-                                <th class="text-center">Obt.</th>
-                                <th class="text-center">Max/Min</th>
-                                <th class="text-center">Obt.</th>
-                                <th class="text-center">Max/Min</th>
-                                <th class="text-center">Obt.</th>
-                            </tr>
+                        <thead id="marks-table-head">
+                            <!-- Header will be dynamically inserted here -->
                         </thead>
                         <tbody id="marks-body"></tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="2" class="text-right">Total</td>
-                                <td id="totalCredit" class="text-center"></td>
-                                <td id="totalCCE" class="text-center"></td>
-
-                                <td id="ceeMinMax" class="text-center"></td>
-                                <td id="ceeObtain" class="text-center"></td>
-
-                                <td id="seeMinMax" class="text-center"></td>
-                                <td id="seeObtain" class="text-center"></td>
-
-                                <td id="totalMinMax" class="text-center"></td>
-                                <td id="totalObtain" class="text-center"></td>
-
-                            </tr>
+                        <tfoot id="marks-table-foot">
+                             <!-- Footer will be dynamically inserted here -->
                         </tfoot>
                     </table>
                 </div>
@@ -839,9 +746,7 @@
                 try {
                     const examResponse = await fetch(`${API_BASE_URL}/examtype/dropdown`, {
                         method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${jwtToken}`
-                        }
+                        headers: { 'Authorization': `Bearer ${jwtToken}` }
                     });
                     if (!examResponse.ok) throw new Error('Failed to fetch exam types');
                     const examData = await examResponse.json();
@@ -853,15 +758,13 @@
 
                     const semesterResponse = await fetch(`${API_BASE_URL}/semester/dropdown`, {
                         method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${jwtToken}`
-                        }
+                        headers: { 'Authorization': `Bearer ${jwtToken}` }
                     });
                     if (!semesterResponse.ok) throw new Error('Failed to fetch semesters');
                     const semesterData = await semesterResponse.json();
                     if (semesterData.status && semesterData.data) {
                         semesterData.data.forEach(sem => {
-                            semesterSelect.add(new Option(sem.semesterName, sem.semesterId));
+                           semesterSelect.add(new Option(sem.semesterName, sem.semesterId));
                         });
                     }
                 } catch (error) {
@@ -919,12 +822,18 @@
             });
 
             const populateResultData = (data) => {
-                document.getElementById('studentName').textContent = data.student.fullName || 'N/A';
-                document.getElementById('seatNo').textContent = data.student.enrollmentNumber || 'N/A';
-                document.getElementById('semesterName').textContent = data.semester.semesterName || 'N/A';
-                document.getElementById('examName').textContent = data.examType.examName || 'N/A';
-                document.getElementById('collegeName').textContent = data.college?.collegeName || 'N/A';
+                const display = (val) => val == null || val === '' ? '-' : val;
+                const isInternal = data.examsource === 'INTERNAL';
 
+                // Populate Headers
+                document.getElementById('collegeName').textContent = display(data.college?.collegeName);
+                document.getElementById('studentName').textContent = display(data.student.fullName);
+                document.getElementById('EnrollmentNO').textContent = display(data.student.enrollmentNumber);
+                document.getElementById('seatNo').textContent = display(data.result.seatNumber);
+                document.getElementById('semesterName').textContent = display(data.semester.semesterName);
+                document.getElementById('examName').textContent = display(data.examType.examName);
+
+                // Populate Profile Image
                 const profileImg = document.getElementById('profileImage');
                 if (data.student.profileImage) {
                     profileImg.src = data.student.profileImage;
@@ -933,121 +842,159 @@
                     profileImg.src = `https://placehold.co/150x150/374151/E0E2E5?text=${initial}`;
                 }
 
-                const display = (val) => val == null || val === '' ? '-' : val;
+                // Dynamically build table structure based on exam source
+                const tableHead = document.getElementById('marks-table-head');
+                const tableFoot = document.getElementById('marks-table-foot');
 
+                if (isInternal) {
+                    tableHead.innerHTML = `
+                        <tr>
+                            <th rowspan="2">Code</th>
+                            <th rowspan="2">Subject Name</th>
+                            <th rowspan="2" class="text-center">Credit</th>
+                            <th rowspan="2" class="text-center">Grade</th>
+                            <th colspan="2" class="text-center">Internal</th>
+                            <th colspan="2" class="text-center">Total</th>
+                        </tr>
+                        <tr>
+                            <th class="text-center">Max/Min</th>
+                            <th class="text-center">Obt.</th>
+                            <th class="text-center">Max/Min</th>
+                            <th class="text-center">Obt.</th>
+                        </tr>
+                    `;
+                    tableFoot.innerHTML = `
+                         <tr>
+                            <td colspan="2" class="text-right">Total</td>
+                            <td id="totalCredit" class="text-center"></td>
+                            <td></td>
+                            <td id="totalSEEMaxMin" class="text-center"></td>
+                            <td id="totalSEEObt" class="text-center"></td>
+                            <td id="grandTotalMaxMin" class="text-center"></td>
+                            <td id="grandTotalObt" class="text-center"></td>
+                        </tr>
+                    `;
+                } else {
+                    tableHead.innerHTML = `
+                        <tr>
+                            <th rowspan="2">Code</th>
+                            <th rowspan="2">Subject Name</th>
+                            <th rowspan="2" class="text-center">Credit</th>
+                            <th rowspan="2" class="text-center">Grade</th>
+                            <th colspan="2" class="text-center">CCE</th>
+                            <th colspan="2" class="text-center">SEE</th>
+                            <th colspan="2" class="text-center">Total</th>
+                        </tr>
+                        <tr>
+                            <th class="text-center">Max/Min</th>
+                            <th class="text-center">Obt.</th>
+                            <th class="text-center">Max/Min</th>
+                            <th class="text-center">Obt.</th>
+                            <th class="text-center">Max/Min</th>
+                            <th class="text-center">Obt.</th>
+                        </tr>
+                    `;
+                     tableFoot.innerHTML = `
+                        <tr>
+                            <td colspan="2" class="text-right">Total</td>
+                            <td id="totalCredit" class="text-center"></td>
+                            <td></td>
+                            <td id="totalCCEMaxMin" class="text-center"></td>
+                            <td id="totalCCEObt" class="text-center"></td>
+                            <td id="totalSEEMaxMin" class="text-center"></td>
+                            <td id="totalSEEObt" class="text-center"></td>
+                            <td id="grandTotalMaxMin" class="text-center"></td>
+                            <td id="grandTotalObt" class="text-center"></td>
+                        </tr>
+                    `;
+                }
 
+                // Populate Table Body
                 const marksBody = document.getElementById('marks-body');
                 marksBody.innerHTML = '';
-                let totalCredits = 0,
-                    totalCCEObt = 0,
-                    totalSEEObt = 0,
-                    grandTotalObt = 0,
-                    grandTotalMax = 0;
+                let totalCredits = 0, grandTotalObt = 0, grandTotalMax = 0;
 
                 data.subjects.forEach(subject => {
                     totalCredits += Number(subject.credit) || 0;
-                    totalCCEObt += Number(subject.cce_obtained) || 0;
-                    totalSEEObt += Number(subject.see_obtained) || 0;
                     grandTotalObt += Number(subject.total_obtained) || 0;
                     grandTotalMax += Number(subject.total_max_min.split('/')[0]) || 0;
 
-                    marksBody.innerHTML += `
-                   <tr>
+                    let rowContent = `
                         <td>${display(subject.subject_code)}</td>
                         <td>${display(subject.subject_name)}</td>
-                     <td class="text-center">${display(subject.credit)}</td>
+                        <td class="text-center">${display(subject.credit)}</td>
                         <td class="text-center">${display(subject.letter_grade)}</td>
-                      <td class="text-center">${display(subject.cce_max_min)}</td>
-                      <td class="text-center">${display(subject.cce_obtained)}</td>
-                      <td class="text-center">${display(subject.see_max_min)}</td>
-                      <td class="text-center">${display(subject.see_obtained)}</td>
-                      <td class="text-center">${display(subject.total_max_min)}</td>
-                      <td class="text-center">${display(subject.total_obtained)}</td>
-                  </tr>`;
+                    `;
+                    
+                    if (!isInternal) {
+                        rowContent += `
+                            <td class="text-center">${display(subject.cce_max_min)}</td>
+                            <td class="text-center">${display(subject.cce_obtained)}</td>
+                        `;
+                    }
+                    
+                    rowContent += `
+                        <td class="text-center">${display(subject.see_max_min)}</td>
+                        <td class="text-center">${display(subject.see_obtained)}</td>
+                        <td class="text-center">${display(subject.total_max_min)}</td>
+                        <td class="text-center">${display(subject.total_obtained)}</td>
+                    `;
+                    
+                    marksBody.innerHTML += `<tr>${rowContent}</tr>`;
                 });
 
-                document.getElementById('totalCredit').textContent = totalCredits;
-                // document.getElementById('totalCCE').textContent = totalCCEObt;
-                // document.getElementById('totalSEE').textContent = totalSEEObt;
-                document.getElementById('ceeObtain').textContent = data.result.total_cce_obt || totalCCEObt || '-';
-                document.getElementById('ceeMinMax').textContent = data.result.total_cce_max_min || '-';
-                document.getElementById('seeObtain').textContent = data.result.total_see_obt || totalSEEObt || '-';
-                document.getElementById('seeMinMax').textContent = data.result.total_see_max_min || '-';
-                document.getElementById('ceeMinMax').textContent = data.result.total_cce_max_min || '-';
-                // document.getElementById('totalObtain').textContent = data.result.total_marks_obt || '-';
-                // document.getElementById('totalMinMax').textContent = data.result.total_marks_max_min || '-';
-                document.getElementById('totalObtain').textContent = data.result.total_marks_obt || '-';
-                document.getElementById('totalMinMax').textContent = data.result.total_marks_max_min || '-';
-                // document.getElementById('grandTotal').textContent = grandTotalObt;
+                // Populate Footer Totals
+                document.getElementById('totalCredit').textContent = display(totalCredits);
+                if (!isInternal) {
+                     document.getElementById('totalCCEObt').textContent = display(data.result.total_cce_obt);
+                     document.getElementById('totalCCEMaxMin').textContent = display(data.result.total_cce_max_min);
+                }
+                document.getElementById('totalSEEObt').textContent = display(data.result.total_see_obt);
+                document.getElementById('totalSEEMaxMin').textContent = display(data.result.total_see_max_min);
+                document.getElementById('grandTotalObt').textContent = display(data.result.total_marks_obt);
+                document.getElementById('grandTotalMaxMin').textContent = display(data.result.total_marks_max_min);
 
-                document.getElementById('sgpa').textContent = data.result.sgpa || 'N/A';
-
+                // Populate Summary Boxes
+                document.getElementById('sgpa').textContent = display(data.result.sgpa);
                 const percentage = grandTotalMax > 0 ? ((grandTotalObt / grandTotalMax) * 100).toFixed(2) + '%' : 'N/A';
                 document.getElementById('percentage').textContent = percentage;
 
                 const resultStatusEl = document.getElementById('resultStatus');
                 const resultContainer = document.getElementById('resultStatusContainer');
-                resultStatusEl.textContent = data.result.final_result || 'N/A';
+                resultStatusEl.textContent = display(data.result.final_result);
                 resultContainer.className = 'summary-box summary-result';
                 resultContainer.classList.add(data.result.final_result?.toLowerCase() === 'pass' ? 'pass' : 'fail');
 
                 showResultOverlay();
             };
+
             const downloadResultAsPDF = () => {
-                const sourceDiv = document.getElementById('result-section');
-
-                // 1️⃣ Clone the div (deep clone with children)
-                const clone = sourceDiv.cloneNode(true);
-                clone.classList.add('result-section-clone');
-
-                // 2️⃣ Remove the action-buttons inside the clone
-                const actions = clone.querySelector('.action-buttons');
-                if (actions) actions.remove();
-
-                // 3️⃣ Create a temporary container for clean export
-                const tempContainer = document.createElement('div');
-                tempContainer.style.position = 'absolute';
-                tempContainer.style.left = '-9999px';
-                tempContainer.appendChild(clone);
-                document.body.appendChild(tempContainer);
-
-                // 4️⃣ Prepare filename
-                const studentName = document.getElementById('studentName')?.textContent.trim().replace(/\s+/g, '_') || 'student';
-                const seatNo = document.getElementById('seatNo')?.textContent.trim() || 'seatno';
+                const printableArea = document.querySelector('.printable-area');
+                const studentName = document.getElementById('studentName').textContent.trim().replace(/\s+/g, '_') || 'student';
+                const seatNo = document.getElementById('seatNo').textContent.trim() || 'seatno';
                 const filename = `Result_${studentName}_${seatNo}.pdf`;
+                
+                const originalWidth = printableArea.style.width;
+                printableArea.style.width = '1024px';
+                document.body.classList.add('pdf-export-mode');
 
-                // 5️⃣ Build html2pdf options (no fixed format to avoid extra blank space)
                 const opt = {
-                    margin: 0,
+                    margin: 0.15,
                     filename: filename,
-                    image: {
-                        type: 'jpeg',
-                        quality: 0.95
+                    image: { type: 'jpeg', quality: 1.0 },
+                    html2canvas: { 
+                        scale: 3, 
+                        useCORS: true,
+                        backgroundColor: null
                     },
-                    html2canvas: {
-                        scale: 2,
-                        useCORS: true
-                    },
-                    jsPDF: {
-                        unit: 'px'
-                    } // ⚡ don't set format here – let html2pdf use canvas size
+                    jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
                 };
-
-                // 6️⃣ Generate the PDF and resize page to exact canvas
-                html2pdf().set(opt).from(clone).toPdf().get('pdf').then(pdf => {
-                    const canvas = document.querySelector('.html2pdf__canvas');
-                    if (canvas) {
-                        const width = canvas.offsetWidth;
-                        const height = canvas.offsetHeight;
-                        pdf.internal.pageSize.width = width;
-                        pdf.internal.pageSize.height = height;
-                    }
-                }).save().then(() => {
-                    // 7️⃣ Clean up the temporary container
-                    document.body.removeChild(tempContainer);
+                
+                html2pdf().from(printableArea).set(opt).save().then(() => {
+                    printableArea.style.width = originalWidth;
+                    document.body.classList.remove('pdf-export-mode');
                 });
             };
-
 
             downloadBtn.addEventListener('click', downloadResultAsPDF);
         });
@@ -1055,3 +1002,4 @@
 </body>
 
 </html>
+
