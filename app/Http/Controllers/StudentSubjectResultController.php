@@ -223,6 +223,10 @@ class StudentSubjectResultController extends Controller
                 'examType' => $result->examType,
                 'result' => [
                     'final_result' => $result->result,
+                    'total_cce_obt' => $result->total_cce_obt,
+                    'total_cce_max_min' => $result->total_cce_max_min ,
+                    'total_see_max_min' => $result->total_see_max_min,
+                    'total_see_obt' => $result->total_see_obt,
                     'total_marks_obt' => $result->total_marks_obt,
                     'total_marks_max_min' => $result->total_marks_max_min,
                     'sgpa' => $result->sgpa,
