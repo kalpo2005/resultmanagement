@@ -619,8 +619,8 @@ class StudentResultController extends Controller
 
                     // If absent, marks = 0, but keep "AB" in max/min field
                     if ($isAbsent) {
-                        $marksValue = 0;
-                        $marksNote  = 'AB';
+                        $marksValue = 'AB';
+                        $marksNote  = $subjectMaxMinRaw;
                     } else {
                         $marksValue = is_numeric($marksRaw) ? (int)$marksRaw : 0;
                         $marksNote  = $subjectMaxMinRaw; // keep original max/min value
