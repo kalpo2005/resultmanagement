@@ -20,6 +20,7 @@ class Student extends Model
         'fullName',
         'collegeId',
         'semesterId',
+        'studentClass',
         'profileImage',
         'dob',
         'city',

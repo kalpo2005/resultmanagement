@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\StudentSubjectResult;
+use App\Models\StudentResult;
 use Illuminate\Validation\ValidationException;
 
 class StudentSubjectResultController extends Controller
@@ -48,11 +49,11 @@ class StudentSubjectResultController extends Controller
             'subject_name' => 'required|string|max:100',
             'credit' => 'required|integer',
             'cce_max_min' => 'required|string',
-            'cce_obtained' => 'required|integer',
+            'cce_obtained' => 'required|string',
             'see_max_min' => 'required|string',
-            'see_obtained' => 'required|integer',
+            'see_obtained' => 'required|string',
             'total_max_min' => 'required|string',
-            'total_obtained' => 'required|integer',
+            'total_obtained' => 'required|string',
             'marks_percentage' => 'sometimes|numeric',
             'letter_grade' => 'sometimes|string|max:5',
             'grade_point' => 'sometimes|numeric',
@@ -81,11 +82,11 @@ class StudentSubjectResultController extends Controller
             'subject_name' => 'sometimes|string|max:100',
             'credit' => 'sometimes|integer',
             'cce_max_min' => 'sometimes|string',
-            'cce_obtained' => 'sometimes|integer',
+            'cce_obtained' => 'sometimes|string',
             'see_max_min' => 'sometimes|string',
-            'see_obtained' => 'sometimes|integer',
+            'see_obtained' => 'sometimes|string',
             'total_max_min' => 'sometimes|string',
-            'total_obtained' => 'sometimes|integer',
+            'total_obtained' => 'sometimes|string',
             'marks_percentage' => 'sometimes|numeric',
             'letter_grade' => 'sometimes|string|max:5',
             'grade_point' => 'sometimes|numeric',
@@ -175,4 +176,66 @@ class StudentSubjectResultController extends Controller
         ], 200);
     }
 
+    // Fetching the student result
+    public function getStudentResult(Request $request)
+    {
+        $validated = $request->validate([
+            'seatNumber' => 'required_without:studentId|string|max:20',
+            'semesterId' => 'nullable|exists:semesters,semesterId',
+            'examTypeId' => 'nullable|exists:exam_types,examTypeId',
+            'studentClass' => 'nullable|string|max:1',
+        ]);
+
+        $query = StudentResult::with(['student', 'semester', 'examType', 'subjects']);
+
+        // 🔹 Search by studentId or seatNumber
+        if (!empty($validated['studentClass'])) {
+            $query->where('studentClass', $validated['studentClass']);
+        }
+        if (!empty($validated['seatNumber'])) {
+            $query->where('seatNumber', $validated['seatNumber']);
+        }
+        if (!empty($validated['semesterId'])) {
+            $query->where('semesterId', $validated['semesterId']);
+        }
+        if (!empty($validated['examTypeId'])) {
+            $query->where('examTypeId', $validated['examTypeId']);
+        }
+
+        $query->whereRaw("LOWER(result) != 'pending'");
+
+        $result = $query->first();
+
+        if (!$result) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No result found for this student',
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Result found successfully',
+            'data' => [
+                'student' => $result->student,
+                'college' => $result->student->college,
+                'semester' => $result->semester,
+                'examType' => $result->examType,
+                'result' => [
+                    'final_result' => $result->result,
+                    'total_cce_obt' => $result->total_cce_obt,
+                    'total_cce_max_min' => $result->total_cce_max_min ,
+                    'total_see_max_min' => $result->total_see_max_min,
+                    'total_see_obt' => $result->total_see_obt,
+                    'total_marks_obt' => $result->total_marks_obt,
+                    'total_marks_max_min' => $result->total_marks_max_min,
+                    'sgpa' => $result->sgpa,
+                    'cgpa' => $result->cgpa,
+                    'total_credit_points' => $result->total_credit_points,
+                    'total_credit_points_obtain' => $result->total_credit_points_obtain,
+                ],
+                'subjects' => $result->subjects
+            ]
+        ], 200);
+    }
 }

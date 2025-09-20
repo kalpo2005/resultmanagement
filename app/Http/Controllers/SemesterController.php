@@ -159,4 +159,18 @@ class SemesterController extends Controller
             'data' => $semester
         ], 200);
     }
+
+    // semester dropdown 
+    public function dropdown()
+    {
+        $semester = Semester::where('status', 1)
+            ->select('semesterId', 'semesterName', 'status')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Smester for dropdown fetched successfully',
+            'data' => $semester
+        ], 200);
+    }
 }

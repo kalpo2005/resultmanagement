@@ -40,6 +40,8 @@ class StudentResultController extends Controller
                 'semesterId' => 'required|exists:semesters,semesterId',
                 'collegeId' => 'required|exists:colleges,collegeId',
                 'examTypeId' => 'required|exists:exam_types,examTypeId',
+                'examsource' => 'required|in:UNIVERSITY,INTERNAL',
+
 
                 'studentClass' => 'nullable|string',
                 'total_cce_max_min' => 'nullable|string',
@@ -88,6 +90,8 @@ class StudentResultController extends Controller
                 'examTypeId' => 'sometimes|exists:exam_types,examTypeId',
                 'collegeId' => 'sometimes|exists:colleges,collegeId',
                 'studentClass' => 'sometimes|string',
+                'examsource' => 'sometimes|in:UNIVERSITY,INTERNAL',
+
 
                 'total_cce_max_min' => 'nullable|string',
                 'total_cce_obt' => 'nullable|integer',
@@ -162,6 +166,7 @@ class StudentResultController extends Controller
             'studentId',
             'semesterId',
             'collegeId',
+            'examsource',
             'studentClass',
             'examTypeId',
             'total_cce_max_min',
@@ -263,7 +268,7 @@ class StudentResultController extends Controller
         }
     }
 
-    // for the marks insert
+    //autocreate api 
     public function updateResultWithSubjects(Request $request)
     {
         try {
@@ -283,12 +288,14 @@ class StudentResultController extends Controller
                 'subjects.*.subject_code' => 'required|string|max:20',
                 'subjects.*.subject_name' => 'required|string|max:100',
                 'subjects.*.credit' => 'required|integer',
+
                 'subjects.*.cce_max_min' => 'required|string',
-                'subjects.*.cce_obtained' => 'required|integer',
+                'subjects.*.cce_obtained' => 'required|string',
                 'subjects.*.see_max_min' => 'required|string',
-                'subjects.*.see_obtained' => 'required|integer',
+                'subjects.*.see_obtained' => 'required|string',
                 'subjects.*.total_max_min' => 'required|string',
-                'subjects.*.total_obtained' => 'required|integer',
+                'subjects.*.total_obtained' => 'required|string',
+
                 'subjects.*.marks_percentage' => 'nullable|numeric',
                 'subjects.*.letter_grade' => 'nullable|string|max:5',
                 'subjects.*.grade_point' => 'nullable|numeric',
@@ -297,7 +304,7 @@ class StudentResultController extends Controller
 
             DB::beginTransaction();
 
-            // Upsert result
+            // Update result
             $studentResult = !empty($validated['resultId'])
                 ? StudentResult::find($validated['resultId'])
                 : new StudentResult();
@@ -317,7 +324,7 @@ class StudentResultController extends Controller
                 'total_marks_max_min' => $validated['result']['total']['total_max_min'] ?? 0,
             ])->save();
 
-            // Insert subjects (skip duplicates)
+            // Insert/Update subjects
             foreach ($validated['subjects'] as $subject) {
                 StudentSubjectResult::updateOrCreate(
                     [
@@ -327,29 +334,29 @@ class StudentResultController extends Controller
                     [
                         'subject_code' => $subject['subject_code'],
                         'subject_type' => $subject['subject_type'] ?? null,
-                        'credit' => $subject['credit'],
+                        'credit' =>  $subject['credit'],
                         'cce_max_min' => $subject['cce_max_min'],
                         'cce_obtained' => $subject['cce_obtained'],
                         'see_max_min' => $subject['see_max_min'],
-                        'see_obtained' => $subject['see_obtained'],
+                        'see_obtained' =>  $subject['see_obtained'],
                         'total_max_min' => $subject['total_max_min'],
-                        'total_obtained' => $subject['total_obtained'],
-                        'marks_percentage' => $subject['marks_percentage'] ?? null,
+                        'total_obtained' =>  $subject['total_obtained'],
+                        'marks_percentage' => isset($subject['marks_percentage']) ? (float) $subject['marks_percentage'] : null,
                         'letter_grade' => $subject['letter_grade'] ?? null,
-                        'grade_point' => $subject['grade_point'] ?? null,
-                        'credit_point' => $subject['credit_point'] ?? null,
+                        'grade_point' => isset($subject['grade_point']) ? (float) $subject['grade_point'] : 0,
+                        'credit_point' => isset($subject['credit_point']) ? (float) $subject['credit_point'] : 0,
                     ]
                 );
             }
 
-            // Recalculate totals
+            // Recalculate totals safely
             $subjects = $studentResult->subjects()->get();
 
-            $totalCredits = $subjects->sum('credit');
-            $totalObtained = $subjects->sum('total_obtained');
-            $totalCreditPoints = $subjects->sum('credit_point');
-            $cceObt = $subjects->sum('cce_obtained');
-            $seeObt = $subjects->sum('see_obtained');
+            $totalCredits = $subjects->sum(fn($s) => (int) $s->credit);
+            $totalObtained = $subjects->sum(fn($s) => (int) $s->total_obtained);
+            $totalCreditPoints = $subjects->sum(fn($s) => (float) $s->credit_point);
+            $cceObt = $subjects->sum(fn($s) => (int) $s->cce_obtained);
+            $seeObt = $subjects->sum(fn($s) => (int) $s->see_obtained);
             $sgpa = $totalCredits > 0 ? round($totalCreditPoints / $totalCredits, 2) : 0;
 
             $studentResult->update([
@@ -371,9 +378,13 @@ class StudentResultController extends Controller
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['status' => false, 'message' => $e->getMessage()], 400);
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], 400);
         }
     }
+
 
     // for the excel to seat number
     public function importResultsExcel(Request $request)
@@ -423,20 +434,21 @@ class StudentResultController extends Controller
                     ];
                     continue;
                 }
+                $exists = DB::table('student_results')
+                    ->where('seatNumber', $seatNumber)
+                    ->where('examTypeId',  $validated['examTypeId'],)
+                    ->exists();
 
-                // // check if result already exists for this seatnumber
-                // $exists = DB::table('student_results')
-                //     ->where('seatNumber', $seatNumber)
-                //     ->exists();
+                if ($exists) {
+                    $skipped[] = [
+                        'seatNumber'   => $seatNumber,
+                        'enrollmentNo' => $enrollmentNo,
+                        'examTypeId'     => $validated['examTypeId'],
+                        'reason'       => 'Already exists for this exam type'
+                    ];
+                    continue;
+                }
 
-                // if ($exists) {
-                //     $skipped[] = [
-                //         'seatNumber'   => $seatNumber,
-                //         'enrollmentNo' => $enrollmentNo,
-                //         'reason'       => 'Already exists'
-                //     ];
-                //     continue;
-                // }
 
                 // insert into student_results
                 $result = StudentResult::create([
@@ -607,8 +619,8 @@ class StudentResultController extends Controller
 
                     // If absent, marks = 0, but keep "AB" in max/min field
                     if ($isAbsent) {
-                        $marksValue = 0;
-                        $marksNote  = 'AB';
+                        $marksValue = 'AB';
+                        $marksNote  = $subjectMaxMinRaw;
                     } else {
                         $marksValue = is_numeric($marksRaw) ? (int)$marksRaw : 0;
                         $marksNote  = $subjectMaxMinRaw; // keep original max/min value
