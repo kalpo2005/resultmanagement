@@ -178,66 +178,113 @@ class StudentSubjectResultController extends Controller
 
     // Fetching the student result
     public function getStudentResult(Request $request)
-    {
-        $validated = $request->validate([
-            'seatNumber' => 'required_without:studentId|string|max:20',
-            'semesterId' => 'nullable|exists:semesters,semesterId',
-            'examTypeId' => 'nullable|exists:exam_types,examTypeId',
-            'studentClass' => 'nullable|string|max:1',
-        ]);
+{
+    $validated = $request->validate([
+        'seatNumber'   => 'required_without:studentId|string|max:20',
+        'studentId'    => 'sometimes|integer|exists:students,studentId',
+        'semesterId'   => 'required|exists:semesters,semesterId',
+        'examTypeId'   => 'required|exists:exam_types,examTypeId',
+        'studentClass' => 'nullable|string|max:1',
+    ]);
 
-        $query = StudentResult::with(['student', 'semester', 'examType', 'subjects']);
+    $query = StudentResult::with(['student', 'semester', 'examType', 'subjects'])
+        ->whereRaw("LOWER(result) != 'pending'");
 
-        // 🔹 Search by studentId or seatNumber
-        if (!empty($validated['studentClass'])) {
-            $query->where('studentClass', $validated['studentClass']);
-        }
-        if (!empty($validated['seatNumber'])) {
-            $query->where('seatNumber', $validated['seatNumber']);
-        }
-        if (!empty($validated['semesterId'])) {
-            $query->where('semesterId', $validated['semesterId']);
-        }
-        if (!empty($validated['examTypeId'])) {
-            $query->where('examTypeId', $validated['examTypeId']);
-        }
-
-        $query->whereRaw("LOWER(result) != 'pending'");
-
-        $result = $query->first();
-
-        if (!$result) {
-            return response()->json([
-                'status' => false,
-                'message' => 'No result found for this student',
-            ], 404);
-        }
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Result found successfully',
-            'data' => [
-                'student' => $result->student,
-                'college' => $result->student->college,
-                'semester' => $result->semester,
-                'examType' => $result->examType,
-                'examsource' => $result->examsource,
-                'result' => [
-                    'seatNumber' => $result->seatNumber,
-                    'final_result' => $result->result,
-                    'total_cce_obt' => $result->total_cce_obt,
-                    'total_cce_max_min' => $result->total_cce_max_min ,
-                    'total_see_max_min' => $result->total_see_max_min,
-                    'total_see_obt' => $result->total_see_obt,
-                    'total_marks_obt' => $result->total_marks_obt,
-                    'total_marks_max_min' => $result->total_marks_max_min,
-                    'sgpa' => $result->sgpa,
-                    'cgpa' => $result->cgpa,
-                    'total_credit_points' => $result->total_credit_points,
-                    'total_credit_points_obtain' => $result->total_credit_points_obtain,
-                ],
-                'subjects' => $result->subjects
-            ]
-        ], 200);
+    // Apply filters
+    if (!empty($validated['studentClass'])) {
+        $query->where('studentClass', $validated['studentClass']);
     }
+    if (!empty($validated['seatNumber'])) {
+        $query->where('seatNumber', $validated['seatNumber']);
+    }
+    if (!empty($validated['studentId'])) {
+        $query->where('studentId', $validated['studentId']);
+    }
+    $query->where('semesterId', $validated['semesterId']);
+    $query->where('examTypeId', $validated['examTypeId']);
+
+    $result = $query->first();
+
+    if (!$result) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'No result found for this student',
+        ], 404);
+    }
+
+    $examSource   = strtoupper($result->student->examsource);
+    $studentClass = $validated['studentClass'] ?? $result->studentClass;
+
+    // INTERNAL exams require class for rank
+    if ($examSource === 'INTERNAL' && empty($studentClass)) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'Student class is required for INTERNAL exams to calculate rank',
+        ], 422);
+    }
+
+    /**
+     * 🔹 Rank Calculation (Competition Ranking)
+     */
+    $rankQuery = StudentResult::selectRaw('studentId, SUM(total_marks_obt) as total_obtained')
+        ->where('examTypeId', $result->examTypeId)
+        ->where('semesterId', $result->semesterId)
+        ->whereRaw("LOWER(result) != 'pending'");
+
+    // Apply class filter only for INTERNAL exams
+    if ($examSource === 'INTERNAL' && $studentClass) {
+        $rankQuery->where('studentClass', $studentClass);
+    }
+
+    $rankedStudents = $rankQuery
+        ->groupBy('studentId')
+        ->orderByDesc('total_obtained')
+        ->get();
+
+    // Competition ranking
+    $ranks      = [];
+    $currentRank = 0;
+    $prevMarks  = null;
+    $position   = 0;
+
+    foreach ($rankedStudents as $student) {
+        $position++;
+        if ($prevMarks === null || $student->total_obtained < $prevMarks) {
+            $currentRank = $position;
+        }
+        $ranks[$student->studentId] = $currentRank;
+        $prevMarks = $student->total_obtained;
+    }
+
+    $rank    = $ranks[$result->studentId] ?? null;
+    $rankKey = $examSource === 'UNIVERSITY' ? 'University Rank' : 'Class Rank';
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'Result found successfully',
+        'data'    => [
+            'student'  => $result->student,
+            'college'  => $result->student->college,
+            'semester' => $result->semester,
+            'examType' => $result->examType,
+            'result'   => [
+                'final_result'               => $result->result,
+                'total_cce_obt'              => $result->total_cce_obt,
+                'total_cce_max_min'          => $result->total_cce_max_min,
+                'total_see_max_min'          => $result->total_see_max_min,
+                'total_see_obt'              => $result->total_see_obt,
+                'total_marks_obt'            => $result->total_marks_obt,
+                'total_marks_max_min'        => $result->total_marks_max_min,
+                'sgpa'                       => $result->sgpa,
+                'cgpa'                       => $result->cgpa,
+                'total_credit_points'        => $result->total_credit_points,
+                'total_credit_points_obtain' => $result->total_credit_points_obtain,
+                'studentClass'               => $studentClass,
+                $rankKey                     => $rank,
+            ],
+            'subjects' => $result->subjects,
+        ],
+    ], 200);
+}
+
 }
