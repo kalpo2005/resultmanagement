@@ -12,16 +12,15 @@
         /* Core Styles & Variables */
         :root {
             --bg-dark: #0D1117;
-            --primary-dark: #1F2937;
-            --secondary-dark: #374151;
+            --primary-dark: #161b22;
+            --secondary-dark: #21262d;
             --border-dark: #30363d;
-            --text-light: #F9FAFB;
-            --text-muted: #9CA3AF;
-            --accent-color: #4F46E5;
-            --accent-hover: #4338CA;
-            --success-color: #16A34A;
-            --error-color: #DC2626;
-            --info-color: #3B82F6;
+            --text-light: #F0F6FC;
+            --text-muted: #8B949E;
+            --accent-color: #58A6FF;
+            --accent-hover: #80B9F8;
+            --success-color: #3FB950;
+            --error-color: #F85149;
         }
 
         body {
@@ -132,12 +131,12 @@
 
         .radio-group input:checked+label {
             background-color: var(--accent-color);
-            color: var(--text-light);
+            color: #0d1117;
         }
 
         .btn {
             background-color: var(--accent-color);
-            color: white;
+            color: #0d1117;
             font-weight: bold;
             padding: 0.6rem 1rem;
             border: none;
@@ -164,7 +163,7 @@
         }
 
         .hidden {
-            display: none;
+            display: none !important;
         }
 
         /* Result Overlay & Card */
@@ -365,11 +364,16 @@
             text-align: right;
         }
 
+        .marks-fail {
+            color: var(--error-color) !important;
+            font-weight: bold;
+        }
+
         .result-summary {
             display: grid;
             gap: 1.5rem;
             margin-top: 2rem;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         }
 
         .summary-box {
@@ -393,7 +397,7 @@
         }
 
         .summary-sgpa {
-            background: linear-gradient(145deg, #4438cad7, #4e46e5da);
+            background: linear-gradient(145deg, #4338CA, #4f46e5);
             border: 1px solid rgba(99, 102, 241, 0.5);
         }
 
@@ -402,7 +406,7 @@
         }
 
         .summary-result.pass {
-            background: linear-gradient(145deg, #059668db, #1fd397d1);
+            background: linear-gradient(145deg, #059669, #10b981);
             border: 1px solid rgba(34, 197, 94, 0.5);
         }
 
@@ -411,7 +415,7 @@
         }
 
         .summary-result.fail {
-            background: linear-gradient(145deg, #dc2626e0, #ef4444d6);
+            background: linear-gradient(145deg, #DC2626, #ef4444);
             border: 1px solid rgba(239, 68, 68, 0.5);
         }
 
@@ -420,13 +424,23 @@
         }
 
         .summary-percentage {
-            background: linear-gradient(145deg, #2564ebd1, #3b83f6d8);
+            background: linear-gradient(145deg, #2563EB, #3b82f6);
             border: 1px solid rgba(96, 165, 250, 0.5);
         }
 
         .summary-percentage p:first-child {
             color: #93C5FD;
         }
+
+        .summary-rank {
+            background: linear-gradient(145deg, #d946ef, #c026d3);
+            border: 1px solid rgba(217, 70, 239, 0.5);
+        }
+
+        .summary-rank p:first-child {
+            color: #f5d0fe;
+        }
+
 
         .dialog-box {
             position: fixed;
@@ -526,8 +540,9 @@
 
         /* PDF Export Specific Styles */
         body.pdf-export-mode {
-             background-color: white !important;
+            background-color: white !important;
         }
+
         body.pdf-export-mode .result-overlay {
             overflow: visible;
             background: none;
@@ -537,7 +552,7 @@
             padding: 0;
             z-index: 100;
         }
-        
+
         body.pdf-export-mode .result-section {
             max-height: none;
             overflow: visible;
@@ -552,22 +567,63 @@
             font-size: 10pt;
             box-shadow: none !important;
         }
-        
-        .pdf-export-mode .card-header h2 { font-size: 16pt; }
-        .pdf-export-mode .card-header p { font-size: 11pt; }
-        .pdf-export-mode .student-info-block { margin-bottom: 1.5rem; gap: 1.5rem; }
-        .pdf-export-mode .student-photo img { width: 6rem; height: 6rem; }
-        .pdf-export-mode .student-details-grid { font-size: 10pt; gap: 0.5rem 2rem; }
-        .pdf-export-mode .student-details-grid div span { font-size: 11pt; }
-        .pdf-export-mode .marks-table { font-size: 8.5pt; }
-        .pdf-export-mode .marks-table th,
-        .pdf-export-mode .marks-table td { padding: 0.4rem 0.5rem; }
-        .pdf-export-mode .result-summary { margin-top: 1.5rem; gap: 1rem; }
-        .pdf-export-mode .summary-box { padding: 1.2rem; }
-        .pdf-export-mode .summary-box p:first-child { font-size: 9pt; }
-        .pdf-export-mode .summary-box p:last-child { font-size: 16pt; }
-        .pdf-export-mode .action-buttons { display: none !important; }
 
+        .pdf-export-mode .card-header h2 {
+            font-size: 16pt;
+        }
+
+        .pdf-export-mode .card-header p {
+            font-size: 11pt;
+        }
+
+        .pdf-export-mode .student-info-block {
+            margin-bottom: 1.5rem;
+            gap: 1.5rem;
+        }
+
+        .pdf-export-mode .student-photo img {
+            width: 6rem;
+            height: 6rem;
+        }
+
+        .pdf-export-mode .student-details-grid {
+            font-size: 10pt;
+            gap: 0.5rem 2rem;
+        }
+
+        .pdf-export-mode .student-details-grid div span {
+            font-size: 11pt;
+        }
+
+        .pdf-export-mode .marks-table {
+            font-size: 8.5pt;
+        }
+
+        .pdf-export-mode .marks-table th,
+        .pdf-export-mode .marks-table td {
+            padding: 0.4rem 0.5rem;
+        }
+
+        .pdf-export-mode .result-summary {
+            margin-top: 1.5rem;
+            gap: 1rem;
+        }
+
+        .pdf-export-mode .summary-box {
+            padding: 1.2rem;
+        }
+
+        .pdf-export-mode .summary-box p:first-child {
+            font-size: 9pt;
+        }
+
+        .pdf-export-mode .summary-box p:last-child {
+            font-size: 16pt;
+        }
+
+        .pdf-export-mode .action-buttons {
+            display: none !important;
+        }
     </style>
 </head>
 
@@ -607,10 +663,10 @@
                 <div class="form-group" style="margin-top: 1rem;">
                     <label class="radio-group-label">Class</label>
                     <div class="radio-group">
-                        <input type="radio" id="classA" name="studentClass" value="A"><label for="classA">A</label>
+                        <input type="radio" id="classA" name="studentClass" value="A" checked><label for="classA">A</label>
                         <input type="radio" id="classB" name="studentClass" value="B"><label for="classB">B</label>
                         <input type="radio" id="classC" name="studentClass" value="C"><label for="classC">C</label>
-                        <input type="radio" id="classD" name="studentClass" value="D" checked><label for="classD">D</label>
+                        <input type="radio" id="classD" name="studentClass" value="D" ><label for="classD">D</label>
                         <input type="radio" id="classE" name="studentClass" value="E"><label for="classE">E</label>
                     </div>
                 </div>
@@ -656,12 +712,12 @@
                         </thead>
                         <tbody id="marks-body"></tbody>
                         <tfoot id="marks-table-foot">
-                             <!-- Footer will be dynamically inserted here -->
+                            <!-- Footer will be dynamically inserted here -->
                         </tfoot>
                     </table>
                 </div>
-                <div class="result-summary">
-                    <div class="summary-box summary-sgpa">
+                <div id="result-summary-container" class="result-summary">
+                    <div id="sgpaContainer" class="summary-box summary-sgpa">
                         <p>SGPA</p>
                         <p id="sgpa"></p>
                     </div>
@@ -672,6 +728,10 @@
                     <div class="summary-box summary-percentage">
                         <p>Percentage</p>
                         <p id="percentage"></p>
+                    </div>
+                    <div id="rankContainer" class="summary-box summary-rank hidden">
+                        <p id="rankTitle"></p>
+                        <p id="rank"></p>
                     </div>
                 </div>
             </div>
@@ -746,7 +806,9 @@
                 try {
                     const examResponse = await fetch(`${API_BASE_URL}/examtype/dropdown`, {
                         method: 'GET',
-                        headers: { 'Authorization': `Bearer ${jwtToken}` }
+                        headers: {
+                            'Authorization': `Bearer ${jwtToken}`
+                        }
                     });
                     if (!examResponse.ok) throw new Error('Failed to fetch exam types');
                     const examData = await examResponse.json();
@@ -758,13 +820,15 @@
 
                     const semesterResponse = await fetch(`${API_BASE_URL}/semester/dropdown`, {
                         method: 'GET',
-                        headers: { 'Authorization': `Bearer ${jwtToken}` }
+                        headers: {
+                            'Authorization': `Bearer ${jwtToken}`
+                        }
                     });
                     if (!semesterResponse.ok) throw new Error('Failed to fetch semesters');
                     const semesterData = await semesterResponse.json();
                     if (semesterData.status && semesterData.data) {
                         semesterData.data.forEach(sem => {
-                           semesterSelect.add(new Option(sem.semesterName, sem.semesterId));
+                            semesterSelect.add(new Option(sem.semesterName, sem.semesterId));
                         });
                     }
                 } catch (error) {
@@ -823,7 +887,7 @@
 
             const populateResultData = (data) => {
                 const display = (val) => val == null || val === '' ? '-' : val;
-                const isInternal = data.examsource === 'INTERNAL';
+                const isInternal = data.result.examsource === 'INTERNAL';
 
                 // Populate Headers
                 document.getElementById('collegeName').textContent = display(data.college?.collegeName);
@@ -849,10 +913,7 @@
                 if (isInternal) {
                     tableHead.innerHTML = `
                         <tr>
-                            <th rowspan="2">Code</th>
                             <th rowspan="2">Subject Name</th>
-                            <th rowspan="2" class="text-center">Credit</th>
-                            <th rowspan="2" class="text-center">Grade</th>
                             <th colspan="2" class="text-center">Internal</th>
                             <th colspan="2" class="text-center">Total</th>
                         </tr>
@@ -865,9 +926,7 @@
                     `;
                     tableFoot.innerHTML = `
                          <tr>
-                            <td colspan="2" class="text-right">Total</td>
-                            <td id="totalCredit" class="text-center"></td>
-                            <td></td>
+                            <td class="text-right">Total</td>
                             <td id="totalSEEMaxMin" class="text-center"></td>
                             <td id="totalSEEObt" class="text-center"></td>
                             <td id="grandTotalMaxMin" class="text-center"></td>
@@ -894,7 +953,7 @@
                             <th class="text-center">Obt.</th>
                         </tr>
                     `;
-                     tableFoot.innerHTML = `
+                    tableFoot.innerHTML = `
                         <tr>
                             <td colspan="2" class="text-right">Total</td>
                             <td id="totalCredit" class="text-center"></td>
@@ -912,42 +971,64 @@
                 // Populate Table Body
                 const marksBody = document.getElementById('marks-body');
                 marksBody.innerHTML = '';
-                let totalCredits = 0, grandTotalObt = 0, grandTotalMax = 0;
+                let totalCredits = 0,
+                    grandTotalObt = 0,
+                    grandTotalMax = 0;
+
+                const isFail = (obt, minStr) => {
+                    if (obt === null || obt === undefined || minStr === null || minStr === undefined) return false;
+                    const obtStr = String(obt);
+                    const min = parseInt(minStr.split('/')[1], 10);
+                    if (/[^0-9]/.test(obtStr)) {
+                        return true; // Contains non-numeric chars like AOO, ZOO
+                    }
+                    const obtNum = parseInt(obtStr, 10);
+                    return obtNum < min;
+                };
 
                 data.subjects.forEach(subject => {
                     totalCredits += Number(subject.credit) || 0;
                     grandTotalObt += Number(subject.total_obtained) || 0;
-                    grandTotalMax += Number(subject.total_max_min.split('/')[0]) || 0;
+                    const maxMin = subject.total_max_min ? subject.total_max_min.split('/')[0] : 0;
+                    grandTotalMax += Number(maxMin) || 0;
 
-                    let rowContent = `
-                        <td>${display(subject.subject_code)}</td>
+                    const cceFailClass = isFail(subject.cce_obtained, subject.cce_max_min) ? 'marks-fail' : '';
+                    const seeFailClass = isFail(subject.see_obtained, subject.see_max_min) ? 'marks-fail' : '';
+                    const totalFailClass = isFail(subject.total_obtained, subject.total_max_min) ? 'marks-fail' : '';
+
+
+                    let rowContent = '';
+                    if (isInternal) {
+                        rowContent = `
                         <td>${display(subject.subject_name)}</td>
-                        <td class="text-center">${display(subject.credit)}</td>
-                        <td class="text-center">${display(subject.letter_grade)}</td>
-                    `;
-                    
-                    if (!isInternal) {
-                        rowContent += `
-                            <td class="text-center">${display(subject.cce_max_min)}</td>
-                            <td class="text-center">${display(subject.cce_obtained)}</td>
-                        `;
-                    }
-                    
-                    rowContent += `
                         <td class="text-center">${display(subject.see_max_min)}</td>
-                        <td class="text-center">${display(subject.see_obtained)}</td>
+                        <td class="text-center ${seeFailClass}">${display(subject.see_obtained)}</td>
                         <td class="text-center">${display(subject.total_max_min)}</td>
-                        <td class="text-center">${display(subject.total_obtained)}</td>
-                    `;
-                    
+                        <td class="text-center ${totalFailClass}">${display(subject.total_obtained)}</td>
+                        `;
+                    } else { // UNIVERSITY / EXTERNAL
+                        rowContent = `
+                            <td>${display(subject.subject_code)}</td>
+                         <td>${display(subject.subject_name)}</td>
+                            <td class="text-center">${display(subject.credit)}</td>
+                            <td class="text-center">${display(subject.letter_grade)}</td>
+                            <td class="text-center">${display(subject.cce_max_min)}</td>
+                            <td class="text-center ${cceFailClass}">${display(subject.cce_obtained)}</td>
+                            <td class="text-center">${display(subject.see_max_min)}</td>
+                            <td class="text-center ${seeFailClass}">${display(subject.see_obtained)}</td>
+                            <td class="text-center">${display(subject.total_max_min)}</td>
+                            <td class="text-center ${totalFailClass}">${display(subject.total_obtained)}</td>
+                         `;
+                    }
+
                     marksBody.innerHTML += `<tr>${rowContent}</tr>`;
                 });
 
                 // Populate Footer Totals
-                document.getElementById('totalCredit').textContent = display(totalCredits);
                 if (!isInternal) {
-                     document.getElementById('totalCCEObt').textContent = display(data.result.total_cce_obt);
-                     document.getElementById('totalCCEMaxMin').textContent = display(data.result.total_cce_max_min);
+                    document.getElementById('totalCredit').textContent = display(totalCredits);
+                    document.getElementById('totalCCEObt').textContent = display(data.result.total_cce_obt);
+                    document.getElementById('totalCCEMaxMin').textContent = display(data.result.total_cce_max_min);
                 }
                 document.getElementById('totalSEEObt').textContent = display(data.result.total_see_obt);
                 document.getElementById('totalSEEMaxMin').textContent = display(data.result.total_see_max_min);
@@ -955,15 +1036,39 @@
                 document.getElementById('grandTotalMaxMin').textContent = display(data.result.total_marks_max_min);
 
                 // Populate Summary Boxes
-                document.getElementById('sgpa').textContent = display(data.result.sgpa);
+                const sgpaContainer = document.getElementById('sgpaContainer');
+                const rankContainer = document.getElementById('rankContainer');
+                const rankTitle = document.getElementById('rankTitle');
+                const rankValue = document.getElementById('rank');
+
+                // Reset visibility
+                sgpaContainer.classList.remove('hidden');
+                rankContainer.classList.add('hidden');
+
+                if (isInternal) {
+                    sgpaContainer.classList.add('hidden');
+                    if (data["Class Rank"] && data["Total Students"]) {
+                        rankTitle.textContent = "Class Rank";
+                        rankValue.textContent = `${data["Class Rank"]} / ${data["Total Students"]}`;
+                        rankContainer.classList.remove('hidden');
+                    }
+                } else { // University
+                    document.getElementById('sgpa').textContent = display(data.result.sgpa);
+                    if (data["University Rank"] && data["Total Students"]) {
+                        rankTitle.textContent = "University Rank";
+                        rankValue.textContent = `${data["University Rank"]} / ${data["Total Students"]}`;
+                        rankContainer.classList.remove('hidden');
+                    }
+                }
+
                 const percentage = grandTotalMax > 0 ? ((grandTotalObt / grandTotalMax) * 100).toFixed(2) + '%' : 'N/A';
                 document.getElementById('percentage').textContent = percentage;
 
                 const resultStatusEl = document.getElementById('resultStatus');
                 const resultContainer = document.getElementById('resultStatusContainer');
-                resultStatusEl.textContent = display(data.result.final_result);
+                resultStatusEl.textContent = display(data.result.result); // Updated key from final_result to result
                 resultContainer.className = 'summary-box summary-result';
-                resultContainer.classList.add(data.result.final_result?.toLowerCase() === 'pass' ? 'pass' : 'fail');
+                resultContainer.classList.add(data.result.result?.toLowerCase() === 'pass' ? 'pass' : 'fail');
 
                 showResultOverlay();
             };
@@ -973,23 +1078,30 @@
                 const studentName = document.getElementById('studentName').textContent.trim().replace(/\s+/g, '_') || 'student';
                 const seatNo = document.getElementById('seatNo').textContent.trim() || 'seatno';
                 const filename = `Result_${studentName}_${seatNo}.pdf`;
-                
+
                 const originalWidth = printableArea.style.width;
                 printableArea.style.width = '1024px';
                 document.body.classList.add('pdf-export-mode');
 
                 const opt = {
-                    margin: 0.15,
+                    margin: 0.25,
                     filename: filename,
-                    image: { type: 'jpeg', quality: 1.0 },
-                    html2canvas: { 
-                        scale: 3, 
+                    image: {
+                        type: 'jpeg',
+                        quality: 1.0
+                    },
+                    html2canvas: {
+                        scale: 3,
                         useCORS: true,
                         backgroundColor: null
                     },
-                    jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+                    jsPDF: {
+                        unit: 'in',
+                        format: 'a4',
+                        orientation: 'landscape'
+                    }
                 };
-                
+
                 html2pdf().from(printableArea).set(opt).save().then(() => {
                     printableArea.style.width = originalWidth;
                     document.body.classList.remove('pdf-export-mode');
@@ -1002,4 +1114,3 @@
 </body>
 
 </html>
-
