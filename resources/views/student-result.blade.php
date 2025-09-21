@@ -666,7 +666,7 @@
                         <input type="radio" id="classA" name="studentClass" value="A" checked><label for="classA">A</label>
                         <input type="radio" id="classB" name="studentClass" value="B"><label for="classB">B</label>
                         <input type="radio" id="classC" name="studentClass" value="C"><label for="classC">C</label>
-                        <input type="radio" id="classD" name="studentClass" value="D" ><label for="classD">D</label>
+                        <input type="radio" id="classD" name="studentClass" value="D"><label for="classD">D</label>
                         <input type="radio" id="classE" name="studentClass" value="E"><label for="classE">E</label>
                     </div>
                 </div>
@@ -1084,14 +1084,14 @@
                 document.body.classList.add('pdf-export-mode');
 
                 const opt = {
-                    margin: 0.25,
+                    margin: [0.10, 0.45, 0.25, 0.05],
                     filename: filename,
                     image: {
                         type: 'jpeg',
                         quality: 1.0
                     },
                     html2canvas: {
-                        scale: 3,
+                        scale: 2.5,
                         useCORS: true,
                         backgroundColor: null
                     },
