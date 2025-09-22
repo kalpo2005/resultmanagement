@@ -220,6 +220,7 @@ class StudentResultController extends Controller
             'examTypeId' => 'required|exists:exam_types,examTypeId',
             'semesterId' => 'required|exists:semesters,semesterId',
         ]);
+          $token = $request->bearerToken();
 
         // 🔹 Fetch matching results
         $results = StudentResult::with('student')
@@ -249,9 +250,10 @@ class StudentResultController extends Controller
 
         // 🔹 Send request to Node.js API
         try {
-            $response = Http::post('http://localhost:3000/get-results', [
-                'students' => $students
-            ]);
+            $response = Http::withToken($token)
+                    ->post('http://localhost:3000/get-results', [
+                        'students' => $students
+                    ]);
 
             return response()->json([
                 'status' => true,
