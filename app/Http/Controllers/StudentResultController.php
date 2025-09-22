@@ -118,7 +118,7 @@ class StudentResultController extends Controller
         }
     }
 
-    // 🔹 Delete
+    // Delete
     private function delete(Request $request)
     {
         $id = $request->input('resultId');
