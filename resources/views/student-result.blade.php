@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" xintegrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <style>
+  <style>
         /* Core Styles & Variables */
         :root {
             --bg-dark: #0D1117;
@@ -17,8 +17,8 @@
             --border-dark: #30363d;
             --text-light: #F0F6FC;
             --text-muted: #8B949E;
-            --accent-color: #58A6FF;
-            --accent-hover: #80B9F8;
+            --accent-color: #4e90dbff;
+            --accent-hover: #2c5b91ff;
             --success-color: #3FB950;
             --error-color: #F85149;
         }
@@ -136,9 +136,9 @@
 
         .btn {
             background-color: var(--accent-color);
-            color: #0d1117;
+            color: var(--text-light);
             font-weight: bold;
-            padding: 0.6rem 1rem;
+            padding: 1rem 1rem;
             border: none;
             border-radius: 0.375rem;
             cursor: pointer;
