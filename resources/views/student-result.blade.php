@@ -511,13 +511,13 @@
 
         @media (min-width: 768px) {
             .form-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(1, 1fr);
             }
         }
 
         @media (min-width: 1024px) {
             .form-grid {
-                grid-template-columns: repeat(4, 1fr);
+                grid-template-columns: repeat(3, 1fr);
             }
         }
 
@@ -625,6 +625,19 @@
             display: none !important;
         }
     </style>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WZQMXLT9P8"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'G-WZQMXLT9P8');
+    </script>
 </head>
 
 <body>
@@ -653,12 +666,6 @@
                             <option value="">Select Semester</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <button type="submit" id="submitBtn" class="btn">
-                            <span id="btn-text">Get Result</span>
-                            <i id="loader" class="fas fa-spinner fa-spin loader hidden"></i>
-                        </button>
-                    </div>
                 </div>
                 <div class="form-group" style="margin-top: 1rem;">
                     <label class="radio-group-label">Class</label>
@@ -669,6 +676,12 @@
                         <input type="radio" id="classD" name="studentClass" value="D"><label for="classD">D</label>
                         <input type="radio" id="classE" name="studentClass" value="E"><label for="classE">E</label>
                     </div>
+                </div>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <button type="submit" id="submitBtn" class="btn">
+                        <span id="btn-text">Get Result</span>
+                        <i id="loader" class="fas fa-spinner fa-spin loader hidden"></i>
+                    </button>
                 </div>
             </form>
         </div>
