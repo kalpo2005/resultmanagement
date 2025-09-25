@@ -21,7 +21,6 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('refresh', [AuthController::class, 'refresh']);
 
-
     // =============== CRUE API WITH ACTION =======================
     Route::post('user', [UserController::class, 'handle']);
     Route::post('role', [RoleController::class, 'handle']);

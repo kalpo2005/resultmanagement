@@ -483,7 +483,7 @@ class StudentResultController extends Controller
                 'collegeId'    => 'required|exists:colleges,collegeId',
                 'semesterId'   => 'required|exists:semesters,semesterId',
                 'examTypeId'   => 'required|exists:exam_types,examTypeId',
-                'studentClass' => 'required|string|max:10',
+                'studentClass' => 'required|string|max:1',
                 'file'         => 'required|file|mimes:xlsx,csv,xls',
             ]);
 
