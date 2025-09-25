@@ -457,6 +457,7 @@ class StudentResultController extends Controller
                     'semesterId'  => $validated['semesterId'],
                     'examTypeId'  => $validated['examTypeId'],
                     'seatNumber'  => $seatNumber,
+                    'examSource'  => 'UNIVERSITY',
                 ]);
 
                 $inserted[] = $result;
@@ -588,6 +589,7 @@ class StudentResultController extends Controller
                         'collegeId'           => $student->collegeId,
                         'seatNumber'          => $seatNumber,
                         'studentClass'        => $validated['studentClass'],
+                        'examSource'          => 'INTERNAL',
                         'result'              => trim($row[$resultCol] ?? null),
                         'percentage'          => trim($row[$percentageCol] ?? null),
                         'total_marks_obt'     => trim($row[$totalCol] ?? null),
