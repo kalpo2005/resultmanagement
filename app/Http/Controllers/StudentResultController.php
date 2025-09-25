@@ -572,7 +572,7 @@ class StudentResultController extends Controller
                     continue;
                 }
 
-                // find student by enrollment
+                // find student by enrollment ....
                 $student = DB::table('students')->where('enrollmentNumber', $enrollmentNo)->first();
                 if (!$student) {
                     $skipped[] = ['row' => $r + 1, 'seatNumber' => $seatNumber, 'enrollmentNo' => $enrollmentNo, 'reason' => 'Student not found'];
