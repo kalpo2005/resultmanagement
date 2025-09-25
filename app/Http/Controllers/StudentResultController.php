@@ -220,7 +220,7 @@ class StudentResultController extends Controller
             'examTypeId' => 'required|exists:exam_types,examTypeId',
             'semesterId' => 'required|exists:semesters,semesterId',
         ]);
-          $token = $request->bearerToken();
+        $token = $request->bearerToken();
 
         // 🔹 Fetch matching results
         $results = StudentResult::with('student')
@@ -251,9 +251,9 @@ class StudentResultController extends Controller
         // 🔹 Send request to Node.js API
         try {
             $response = Http::withToken($token)
-                    ->post('http://localhost:3000/get-results', [
-                        'students' => $students
-                    ]);
+                ->post('http://localhost:3000/get-results', [
+                    'students' => $students
+                ]);
 
             return response()->json([
                 'status' => true,
@@ -590,6 +590,7 @@ class StudentResultController extends Controller
                         'collegeId'           => $student->collegeId,
                         'seatNumber'          => $seatNumber,
                         'studentClass'        => $validated['studentClass'],
+                        'examsource'        => 'INTERNAL',
                         'result'              => trim($row[$resultCol] ?? null),
                         'percentage'          => trim($row[$percentageCol] ?? null),
                         'total_marks_obt'     => trim($row[$totalCol] ?? null),
