@@ -233,7 +233,8 @@ class StudentController extends Controller
                 'collegeId'   => 'required|exists:colleges,collegeId',
                 'semesterId'   => 'required|exists:semesters,semesterId',
                 'seatStart'   => 'required|integer',
-                'seatEnd'     => 'required|integer',
+                'seatEnd'     => 'required|string|integer',
+                'studentClass' => 'sometimes|max:1',
                 'excel'        => 'required|mimes:xlsx,xls'
             ]);
 
@@ -282,6 +283,7 @@ class StudentController extends Controller
                     'middleName'       => $middleName,
                     'lastName'         => $lastName,
                     'collegeId'        => $request->collegeId,
+                    'studentClass'     => $request->studentClass ?? null,
                     'semesterId'       => $request->semesterId, // you can add logic for semester
                     'status'           => true
                 ]);

@@ -118,7 +118,7 @@ class StudentResultController extends Controller
         }
     }
 
-    // 🔹 Delete
+    // Delete
     private function delete(Request $request)
     {
         $id = $request->input('resultId');
@@ -220,6 +220,7 @@ class StudentResultController extends Controller
             'examTypeId' => 'required|exists:exam_types,examTypeId',
             'semesterId' => 'required|exists:semesters,semesterId',
         ]);
+        $token = $request->bearerToken();
 
         // 🔹 Fetch matching results
         $results = StudentResult::with('student')
@@ -249,9 +250,10 @@ class StudentResultController extends Controller
 
         // 🔹 Send request to Node.js API
         try {
-            $response = Http::post('http://localhost:3000/get-results', [
-                'students' => $students
-            ]);
+            $response = Http::withToken($token)
+                ->post('http://localhost:3000/get-results', [
+                    'students' => $students
+                ]);
 
             return response()->json([
                 'status' => true,
@@ -482,7 +484,7 @@ class StudentResultController extends Controller
                 'collegeId'    => 'required|exists:colleges,collegeId',
                 'semesterId'   => 'required|exists:semesters,semesterId',
                 'examTypeId'   => 'required|exists:exam_types,examTypeId',
-                'studentClass' => 'required|string|max:10',
+                'studentClass' => 'required|string|max:1',
                 'file'         => 'required|file|mimes:xlsx,csv,xls',
             ]);
 
@@ -571,7 +573,7 @@ class StudentResultController extends Controller
                     continue;
                 }
 
-                // find student by enrollment
+                // find student by enrollment ....
                 $student = DB::table('students')->where('enrollmentNumber', $enrollmentNo)->first();
                 if (!$student) {
                     $skipped[] = ['row' => $r + 1, 'seatNumber' => $seatNumber, 'enrollmentNo' => $enrollmentNo, 'reason' => 'Student not found'];
